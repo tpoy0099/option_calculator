@@ -37,17 +37,29 @@ class Engine:
     def qryTableDataFeed(self):
         self.__pushMsg(MessageTypes.GUI_QUERY_TABLE_FEED)
 
-    def qryCalGreeksSensibilityByPrice(self, group_id):
-        self.__pushMsg(MessageTypes.GUI_QUERY_CAL_SENSI_BY_PRICE, group_id)
+    def qryCalGreeksSensibilityByPrice(self, group_id_ls):
+        self.__pushMsg(MessageTypes.GUI_QUERY_CAL_SENSI_BY_PRICE, group_id_ls)
 
-    def qryCalGreeksSensibilityByVolatility(self, group_id):
-        self.__pushMsg(MessageTypes.GUI_QUERY_CAL_SENSI_BY_VOLA, group_id)
+    def qryCalGreeksSensibilityByVolatility(self, group_id_ls):
+        self.__pushMsg(MessageTypes.GUI_QUERY_CAL_SENSI_BY_VOLA, group_id_ls)
 
-    def qryCalGreeksSensibilityByTime(self, group_id):
-        self.__pushMsg(MessageTypes.GUI_QUERY_CAL_SENSI_BY_TIME, group_id)
+    def qryCalGreeksSensibilityByTime(self, group_id_ls):
+        self.__pushMsg(MessageTypes.GUI_QUERY_CAL_SENSI_BY_TIME, group_id_ls)
+
+    def qryCalGreeksSensibilityByPricePos(self, pos_row_idx):
+        self.__pushMsg(MessageTypes.GUI_QUERY_CAL_SENSI_BY_PRICE_POS, pos_row_idx)
+
+    def qryCalGreeksSensibilityByVolatilityPos(self, pos_row_idx):
+        self.__pushMsg(MessageTypes.GUI_QUERY_CAL_SENSI_BY_VOLA_POS, pos_row_idx)
+
+    def qryCalGreeksSensibilityByTimePos(self, pos_row_idx):
+        self.__pushMsg(MessageTypes.GUI_QUERY_CAL_SENSI_BY_TIME, pos_row_idx)
 
     def initialize(self):
         self.__pushMsg(MessageTypes.INITIALIZE)
+
+    def reloadPositions(self):
+        self.__pushMsg(MessageTypes.GUI_QUERY_RELOAD_POSITIONS)
 
     def quit(self):
         self.__pushMsg(MessageTypes.QUIT)
@@ -80,9 +92,17 @@ class Engine:
                 self.__replyCalGreekSensiByVolatility(msg.content)
             elif msg.type is MessageTypes.GUI_QUERY_CAL_SENSI_BY_TIME:
                 self.__replyCalGreekSensiByTime(msg.content)
+            elif msg.type is MessageTypes.GUI_QUERY_CAL_SENSI_BY_PRICE_POS:
+                self.__replyCalGreekSensiByPricePos(msg.content)
+            elif msg.type is MessageTypes.GUI_QUERY_CAL_SENSI_BY_VOLA_POS:
+                self.__replyCalGreekSensiByVolatilityPos(msg.content)
+            elif msg.type is MessageTypes.GUI_QUERY_CAL_SENSI_BY_TIME_POS:
+                self.__replyCalGreekSensiByTimePos(msg.content)
             #initialize
             elif msg.type is MessageTypes.INITIALIZE:
                 self.__initialize()
+            elif msg.type is MessageTypes.GUI_QUERY_RELOAD_POSITIONS:
+                self.__reloadPositions()
             elif msg.type is MessageTypes.QUIT:
                 break
         #thread terminate
@@ -94,6 +114,12 @@ class Engine:
         if pos.shape()[0] > 0:
             self.__updateData()
         return
+
+    def __reloadPositions(self):
+        self.db = DataProxy()
+        self.__initialize()
+        self.__replyEtfQuoteFeed()
+        self.__replyTableFeed()
 
     def __updateData(self):
         self.last_sync_time = DT.datetime.now()
@@ -167,21 +193,33 @@ class Engine:
         if self.etf:
             self.gui.replyQryEtfQuoteFeed(dict(self.etf))
 
-    def __replyCalGreekSensiByPrice(self, group_id):
-        pos_data = self.db.getPositionDataHandler().getDataFrame()
-        sli_data = pos_data.xs(group_id, level='group_id').copy()
+    def __replyCalGreekSensiByPrice(self, group_id_ls):
+        sli_data = self.db.getPositionDataByGroupId(group_id_ls)
         rtn = getGreeksSensibilityByPrice(sli_data, self.etf['last_price'])
         self.gui.replyQryCalGreeksSensibilityByPrice(rtn)
 
-    def __replyCalGreekSensiByVolatility(self, group_id):
-        pos_data = self.db.getPositionDataHandler().getDataFrame()
-        sli_data = pos_data.xs(group_id, level='group_id').copy()
+    def __replyCalGreekSensiByVolatility(self, group_id_ls):
+        sli_data = self.db.getPositionDataByGroupId(group_id_ls)
         rtn = getGreeksSensibilityByVolatility(sli_data, self.etf['last_price'])
         self.gui.replyQryCalGreeksSensibilityByVolatility(rtn)
 
-    def __replyCalGreekSensiByTime(self, group_id):
-        pos_data = self.db.getPositionDataHandler().getDataFrame()
-        sli_data = pos_data.xs(group_id, level='group_id').copy()
+    def __replyCalGreekSensiByTime(self, group_id_ls):
+        sli_data = self.db.getPositionDataByGroupId(group_id_ls)
+        rtn = getGreeksSensibilityByTime(sli_data, self.etf['last_price'])
+        self.gui.replyQryCalGreeksSensibilityByTime(rtn)
+
+    def __replyCalGreekSensiByPricePos(self, pos_row_idx):
+        sli_data = self.db.getPositionDataByRowIdx(pos_row_idx)
+        rtn = getGreeksSensibilityByPrice(sli_data, self.etf['last_price'])
+        self.gui.replyQryCalGreeksSensibilityByPrice(rtn)
+
+    def __replyCalGreekSensiByVolatilityPos(self, pos_row_idx):
+        sli_data = self.db.getPositionDataByRowIdx(pos_row_idx)
+        rtn = getGreeksSensibilityByVolatility(sli_data, self.etf['last_price'])
+        self.gui.replyQryCalGreeksSensibilityByVolatility(rtn)
+
+    def __replyCalGreekSensiByTimePos(self, pos_row_idx):
+        sli_data = self.db.getPositionDataByRowIdx(pos_row_idx)
         rtn = getGreeksSensibilityByTime(sli_data, self.etf['last_price'])
         self.gui.replyQryCalGreeksSensibilityByTime(rtn)
 

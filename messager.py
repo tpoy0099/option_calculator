@@ -3,22 +3,34 @@ import enum
 import threading as THD
 import datetime as DT
 
-class MessageTypes(enum.Enum):
-    QUIT = 0
-    INITIALIZE = 1
-    UPDATEDATA = 2
+class AutoEnums(enum.Enum):
+    def __new__(cls):
+        value = len(cls.__members__) + 1
+        obj = object.__new__(cls)
+        obj._value_ = value
+        return obj
 
-    GUI_QUERY_TABLE_FEED = 20
-    GUI_QUERY_ETF_QUOTE_FEED = 21
-    GUI_QUERY_CAL_SENSI_BY_PRICE = 22
-    GUI_QUERY_CAL_SENSI_BY_VOLA  = 23
-    GUI_QUERY_CAL_SENSI_BY_TIME  = 24
+class MessageTypes(AutoEnums):
+    QUIT = ()
+    INITIALIZE = ()
+    UPDATEDATA = ()
 
-    REPLY_TABLE_FEED = 40
-    REPLY_ETF_QUOTE_FEED = 41
-    REPLY_CAL_SENSI_BY_PRICE = 42
-    REPLY_CAL_SENSI_BY_VOLA  = 43
-    REPLY_CAL_SENSI_BY_TIME  = 44
+    GUI_QUERY_TABLE_FEED = ()
+    GUI_QUERY_ETF_QUOTE_FEED = ()
+    GUI_QUERY_CAL_SENSI_BY_PRICE = ()
+    GUI_QUERY_CAL_SENSI_BY_VOLA  = ()
+    GUI_QUERY_CAL_SENSI_BY_TIME  = ()
+    GUI_QUERY_CAL_SENSI_BY_PRICE_POS = ()
+    GUI_QUERY_CAL_SENSI_BY_VOLA_POS  = ()
+    GUI_QUERY_CAL_SENSI_BY_TIME_POS  = ()
+
+    GUI_QUERY_RELOAD_POSITIONS = ()
+
+    REPLY_TABLE_FEED = ()
+    REPLY_ETF_QUOTE_FEED = ()
+    REPLY_CAL_SENSI_BY_PRICE = ()
+    REPLY_CAL_SENSI_BY_VOLA  = ()
+    REPLY_CAL_SENSI_BY_TIME  = ()
 
 class Message:
     def __init__(self, msg_type, content):

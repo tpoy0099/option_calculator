@@ -3,6 +3,8 @@ import os
 import pandas as PD
 import datetime as DT
 
+IDX = PD.IndexSlice
+
 def loadPositionCsv(csvfile=r'./positions.csv'):
     try:
         df = PD.read_csv(csvfile, parse_dates=True, skip_blank_lines=True)
@@ -20,19 +22,23 @@ class PositionData:
 
     def __init__(self):
         self.pos_df = None
+        self.ori_csv_df = None
 
-    def initialize(self):
-        df, err = loadPositionCsv()
-        if err is None:
-            #copy original data
-            self.pos_df = PD.DataFrame(columns=PositionData.PROSITION_DF_HEADERS)
-            for header in self.pos_df.columns:
-                if header in df.columns:
-                    self.pos_df[header] = df[header].copy()
-            self.pos_df['income'] = self.pos_df['lots'] * self.pos_df['dir'] \
-                                    * self.pos_df['open_price'] * 10000 * -1
-        else:
-            return False
+    def initialize(self, ori_pos_df=None):
+        if ori_pos_df is None:
+            ori_pos_df, err = loadPositionCsv()
+        self.ori_csv_df = ori_pos_df
+        self.createPositionDf()
+        return
+
+    def createPositionDf(self):
+        self.pos_df = PD.DataFrame(columns=PositionData.PROSITION_DF_HEADERS)
+        for header in self.pos_df.columns:
+            if header in self.ori_csv_df.columns:
+                self.pos_df[header] = self.ori_csv_df[header].copy()
+        self.pos_df['income'] = self.pos_df['lots'] * self.pos_df['dir'] \
+                                * self.pos_df['open_price'] * 10000 * -1
+        return
 
 class TradeGroupData(PositionData):
     CROSS_DF_HEADERS = ('group', 'pot_profit', 'pot_delta', 'pot_gamma', 'pot_vega',
@@ -42,8 +48,8 @@ class TradeGroupData(PositionData):
         super(TradeGroupData, self).__init__()
         self.cross_df = None
 
-    def initialize(self):
-        super(TradeGroupData, self).initialize()
+    def initialize(self, ori_pos_df=None):
+        super(TradeGroupData, self).initialize(ori_pos_df)
         self.pos_df = self.pos_df.set_index([self.pos_df['group'], self.pos_df.index], drop=False)
         self.pos_df.index.names = ['group_id', 'index']
         #generate cross table indexed by group
@@ -63,13 +69,6 @@ class TradeGroupData(PositionData):
             self.cross_df['pot_principal'].loc[i] = self.cross_df['pot_margin'].loc[i] - \
                                                     self.cross_df['pot_income'].loc[i]
         return
-
-#class EtfPriceData:
-#    ETF_DF_HEADERS = ('update_time', 'open_price', 'high_price',
-#                      'low_price', 'last_price')
-#
-#    def __init__(self):
-#        self.etf_df = PD.DataFrame(columns=EtfPriceData.ETF_DF_HEADERS)
 
 class MatrixHandler:
     def __init__(self):
@@ -140,17 +139,30 @@ class DataProxy(TradeGroupData):
         super(DataProxy, self).__init__()
         self.pos = MatrixHandler()
         self.pot = MatrixHandler()
+        self.ori_pos = MatrixHandler()
 
-    def initialize(self):
-        super(DataProxy, self).initialize()
+    def initialize(self, ori_position_df=None):
+        super(DataProxy, self).initialize(ori_position_df)
+        self.ori_pos.attachDataframe(self.ori_csv_df)
         self.pos.attachDataframe(self.pos_df)
         self.pot.attachDataframe(self.cross_df)
 
     def updateData(self):
         super(DataProxy, self).updateData()
 
+    def getOriginPosHandler(self):
+        pass
+
     def getPositionDataHandler(self):
         return self.pos
+
+    def getPositionDataByGroupId(self, group_id_ls):
+        df = self.pos.getDataFrame()
+        return df.loc[IDX[group_id_ls,:], :].copy()
+
+    def getPositionDataByRowIdx(self, row_idx_ls):
+        df = self.pos.getDataFrame()
+        return df.loc[IDX[:, row_idx_ls], :].copy()
 
     def getPortfolioDataHandler(self):
         return self.pot
