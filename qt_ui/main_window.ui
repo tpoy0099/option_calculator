@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>824</width>
-    <height>580</height>
+    <width>1024</width>
+    <height>576</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,22 +17,15 @@
    <layout class="QGridLayout" name="gridLayout_3">
     <item row="0" column="0">
      <layout class="QGridLayout" name="gridLayout_2">
-      <item row="2" column="0">
-       <widget class="QTableWidget" name="portfolio_table">
-        <property name="frameShape">
-         <enum>QFrame::WinPanel</enum>
-        </property>
-        <property name="editTriggers">
-         <set>QAbstractItemView::NoEditTriggers</set>
-        </property>
-       </widget>
-      </item>
       <item row="0" column="0">
        <layout class="QHBoxLayout" name="horizontalLayout">
         <item>
          <widget class="QLabel" name="etf_name_label">
           <property name="text">
-           <string>50ETF 510050.SH (O/H/L/C)</string>
+           <string>510050.SH</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
           </property>
          </widget>
         </item>
@@ -84,6 +77,13 @@
          </widget>
         </item>
         <item>
+         <widget class="Line" name="line_2">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QLabel" name="update_time_label">
           <property name="text">
            <string>N/A</string>
@@ -94,19 +94,6 @@
          </widget>
         </item>
        </layout>
-      </item>
-      <item row="1" column="0">
-       <widget class="QTableWidget" name="positions_table">
-        <property name="frameShape">
-         <enum>QFrame::WinPanel</enum>
-        </property>
-        <property name="editTriggers">
-         <set>QAbstractItemView::NoEditTriggers</set>
-        </property>
-        <property name="sortingEnabled">
-         <bool>false</bool>
-        </property>
-       </widget>
       </item>
       <item row="3" column="0">
        <layout class="QGridLayout" name="gridLayout">
@@ -183,6 +170,29 @@
         </item>
        </layout>
       </item>
+      <item row="1" column="0">
+       <widget class="QTableView" name="position_vtable">
+        <property name="frameShape">
+         <enum>QFrame::WinPanel</enum>
+        </property>
+        <property name="editTriggers">
+         <set>QAbstractItemView::NoEditTriggers</set>
+        </property>
+        <property name="alternatingRowColors">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QTableView" name="portfolio_vtable">
+        <property name="editTriggers">
+         <set>QAbstractItemView::NoEditTriggers</set>
+        </property>
+        <property name="alternatingRowColors">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
      </layout>
     </item>
    </layout>
@@ -192,7 +202,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>824</width>
+     <width>1024</width>
      <height>26</height>
     </rect>
    </property>

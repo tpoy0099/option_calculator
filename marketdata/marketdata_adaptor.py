@@ -1,7 +1,8 @@
 #coding=utf8
-import random
 import datetime as DT
-from wind_data_provider import WindProvider
+
+from marketdata.wind_data_provider import WindProvider
+
 
 ##############################################################
 
@@ -33,6 +34,15 @@ class MarketdataAdaptor:
 
     def getLastprice(self, code):
         return WIND_PVD.getLastPrice(code)
+
+    def getDailyOpen(self, code):
+        return WIND_PVD.getDailyOpenPrice(code)
+
+    def getDailyHigh(self, code):
+        return WIND_PVD.getDailyHighPrice(code)
+
+    def getDailyLow(self, code):
+        return WIND_PVD.getDailyLowPrice(code)
 
     def getLastUpdateTime(self, code):
         return DT.datetime.now()
