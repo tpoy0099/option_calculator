@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'main_window.ui'
 #
-# Created: Mon Oct 19 21:28:50 2015
+# Created: Tue Oct 20 14:57:25 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -99,9 +99,9 @@ class Ui_MainWindow(object):
         self.edit_position_button = QtGui.QPushButton(self.centralwidget)
         self.edit_position_button.setObjectName(_fromUtf8("edit_position_button"))
         self.gridLayout.addWidget(self.edit_position_button, 1, 0, 1, 1)
-        self.greeks_sensibility_button = QtGui.QPushButton(self.centralwidget)
-        self.greeks_sensibility_button.setObjectName(_fromUtf8("greeks_sensibility_button"))
-        self.gridLayout.addWidget(self.greeks_sensibility_button, 1, 1, 1, 1)
+        self.plot_button = QtGui.QPushButton(self.centralwidget)
+        self.plot_button.setObjectName(_fromUtf8("plot_button"))
+        self.gridLayout.addWidget(self.plot_button, 1, 1, 1, 1)
         self.gridLayout_2.addLayout(self.gridLayout, 3, 0, 1, 1)
         self.position_vtable = QtGui.QTableView(self.centralwidget)
         self.position_vtable.setFrameShape(QtGui.QFrame.WinPanel)
@@ -142,13 +142,13 @@ class Ui_MainWindow(object):
         self.etf_lastprice_label.setText(_translate("MainWindow", "0", None))
         self.update_time_label.setText(_translate("MainWindow", "N/A", None))
         self.fresh_quotes_button.setText(_translate("MainWindow", "fresh quotes", None))
-        self.greeks_x_axis_combobox.setItemText(0, _translate("MainWindow", "by assert price", None))
-        self.greeks_x_axis_combobox.setItemText(1, _translate("MainWindow", "by volatility", None))
-        self.greeks_x_axis_combobox.setItemText(2, _translate("MainWindow", "by time", None))
-        self.greeks_x_axis_combobox.setItemText(3, _translate("MainWindow", "all of three", None))
+        self.greeks_x_axis_combobox.setItemText(0, _translate("MainWindow", "greeks sensibility by assert price", None))
+        self.greeks_x_axis_combobox.setItemText(1, _translate("MainWindow", "greeks sensibility by volatility", None))
+        self.greeks_x_axis_combobox.setItemText(2, _translate("MainWindow", "greeks sensibility by time", None))
+        self.greeks_x_axis_combobox.setItemText(3, _translate("MainWindow", "exercise profit", None))
         self.portfolio_checkBox.setText(_translate("MainWindow", "portfolio", None))
         self.edit_position_button.setText(_translate("MainWindow", "edit position", None))
-        self.greeks_sensibility_button.setText(_translate("MainWindow", "greeks sensibility", None))
+        self.plot_button.setText(_translate("MainWindow", "plot", None))
         self.menuAbout.setTitle(_translate("MainWindow", "about", None))
         self.actionAbout.setText(_translate("MainWindow", "about", None))
 

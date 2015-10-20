@@ -24,7 +24,11 @@ class PosEditor(QDialog, ui_position_editor.Ui_position_editor_dialog):
         self.position_edit_vtable.setItemDelegate(self.delegate)
         self.position_edit_vtable.setModel(self.model)
         #init data
+        self.controler = None
         self.model.setSize(0, PosEditor.EDIT_TABLE_HEADERS)
+
+    def setControler(self, ctl):
+        self.controler = ctl
 
     #--------------------------------------------------
     def wakeupEditor(self):
@@ -47,15 +51,20 @@ class PosEditor(QDialog, ui_position_editor.Ui_position_editor_dialog):
         self.close()
 
     def onSaveBtClicked(self):
-        #a = self.model.createIndex(0,0)
-        #b= a.model().data.hori_headers
-        pass
+        rtn = QMessageBox.question(self, 'Confirm', 'Save position changes ?',
+                                   QMessageBox.Yes, QMessageBox.No)
+        if rtn == QMessageBox.Yes:
+            data = TableHandler()
+            data.copy(self.model.data)
+            self.controler.onEditorClickBtSaveAll(data)
+        return
 
     def onReloadBtClicked(self):
-        #self.position_edit_table.setItem(0,0, QTableWidgetItem('test'))
-        #item = self.position_edit_table.item(0,0)
-        #s = item.text()
-        pass
+        rtn = QMessageBox.question(self, 'Confirm', 'Reload from position.csv ?',
+                                   QMessageBox.Yes, QMessageBox.No)
+        if rtn == QMessageBox.Yes:
+            self.controler.onEditorClickBtReloadPosition()
+        return
 
 #######################################################################
 if __name__ == '__main__':

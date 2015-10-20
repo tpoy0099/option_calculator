@@ -1,7 +1,7 @@
 # option_calculator
     
 手头暂时没有用的顺手的期权组合希腊值计算器    
-就准备自己写了
+自己写吧...
     
 底层库类依赖:    
 pandas, pyqt, numpy, scipy    
@@ -12,6 +12,6 @@ pandas, pyqt, numpy, scipy
 希腊值敏感性分析作图    
 期权程序化交易算法单(大坑)    
     
-暂时通过windpy,通过wind客户端获取行情数据
+暂时通过wind客户端python-api获取行情数据
 
 

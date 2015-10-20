@@ -213,6 +213,33 @@ def getGreeksSensibilityByPrice(pos_df, asset_price):
     return res
 
 ######################################################################
+def getExerciseProfitCurve(pos_df, asset_price):
+    res = {'central_x': asset_price,
+           'ax_x' : None,
+           'exercise_profit': list()}
+
+    x_lower  = asset_price * 0.5
+    x_upper  = asset_price * 1.5
+    step_len = (x_upper - x_lower) / 60
+    price_range = [x_lower + s * step_len for s in range(0, 60)]
+
+    section_point = set(pos_df['strike'])
+    section_point.update(price_range)
+    res['ax_x'] = list(section_point)
+    res['ax_x'].sort()
+
+    net_cost = (pos_df['open_price'] * -pos_df['dir'] * pos_df['lots']).sum()
+
+    for price in res['ax_x']:
+        profit = net_cost
+        for pr in pos_df.iterrows():
+            row = pr[1]
+            timev = getIntrinsicValue(row['strike'], price, row['type'] == 'call')
+            profit += timev * row['dir'] * row['lots']
+        res['exercise_profit'].append(profit)
+    return res
+
+######################################################################
 #analyse trade state
 
 def getOptionIncome(trade_dir, lots, open_price, multiplier):

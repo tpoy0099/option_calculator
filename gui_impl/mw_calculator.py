@@ -25,6 +25,9 @@ def decorateAndPlot(sp, x_ls, y_ls, title=None, central_x=0):
     sp.grid(True)
     return
 
+def plotZeroLine(sp):
+    sp.plot(sp.get_xlim(), [0,0], color="blue", linewidth=0.5, linestyle="-")
+
 #############################################################################
 
 class OptionCalculator(QMainWindow, ui_main_window.Ui_MainWindow):
@@ -43,8 +46,9 @@ class OptionCalculator(QMainWindow, ui_main_window.Ui_MainWindow):
         #define signal&slot
         self.connect(self.fresh_quotes_button, SIGNAL('clicked()'), self.__onRefreshQuoteBtClicked)
         self.connect(self.edit_position_button, SIGNAL('clicked()'), self.__onEditPosBtClicked)
-        self.connect(self.greeks_sensibility_button, SIGNAL('clicked()'), self.__onPlotGreeksSensibilityClicked)
+        self.connect(self.plot_button, SIGNAL('clicked()'), self.__onPlotBtClicked)
         self.connect(self, SIGNAL('PLOT_SENSIBILITY'), self.__plotGreeksSensibility)
+        self.connect(self, SIGNAL('PLOT_EXERCISE_CURVE'), self.__plotExerciseCurve)
         self.connect(self, SIGNAL('SET_ETF_DISPLAY'), self.__setEtfDataDisplay)
         self.connect(self, SIGNAL('SET_CENTRAL_DISPLAY'), self.__setCentralTableDisplay)
         #init position vtable
@@ -68,13 +72,14 @@ class OptionCalculator(QMainWindow, ui_main_window.Ui_MainWindow):
         self.msg_thread.start()
         #data engine
         self.engine = Engine(self)
-        self.engine.initialize()
+        self.engine.qryInitialize()
         #flow control
         self.is_updating = False
         self.auto_refresh_timer = None
         self.__startAutoRefresh()
         #qt child
         self.edit_dialog = PosEditor(self)
+        self.edit_dialog.setControler(self)
         return
 
     def quit(self):
@@ -95,6 +100,9 @@ class OptionCalculator(QMainWindow, ui_main_window.Ui_MainWindow):
     def onRepCalGreeksSensibility(self, plot_data, x_axis_type):
         self.__pushMsg(MessageTypes.REPLY_CAL_SENSI, (plot_data, x_axis_type))
 
+    def onRepCalExerciseCurve(self, plot_data):
+        self.__pushMsg(MessageTypes.REPLY_EXERCISE_CURVE, plot_data)
+
     def onRepPositionBasedataFeed(self, positions):
         self.__pushMsg(MessageTypes.REPLY_POSITION_BASEDATA_FEED, positions)
 
@@ -111,6 +119,8 @@ class OptionCalculator(QMainWindow, ui_main_window.Ui_MainWindow):
                 self.emit(SIGNAL('SET_ETF_DISPLAY'), msg.content)
             elif msg.type is MessageTypes.REPLY_CAL_SENSI:
                 self.emit(SIGNAL('PLOT_SENSIBILITY'), msg.content[0], msg.content[1])
+            elif msg.type is MessageTypes.REPLY_EXERCISE_CURVE:
+                self.emit(SIGNAL('PLOT_EXERCISE_CURVE'), msg.content)
             elif msg.type is MessageTypes.REPLY_POSITION_BASEDATA_FEED:
                 self.__updatePosEditorData(msg.content)
             elif msg.type is MessageTypes.QUIT:
@@ -120,6 +130,15 @@ class OptionCalculator(QMainWindow, ui_main_window.Ui_MainWindow):
     def __pushMsg(self, msg_type, content=None):
         self.msg.pushMsg(msg_type, content)
         self.msg_event.set()
+    #----------------------------------------------------------------------
+    def onEditorClickBtSaveAll(self, position_data):
+        self.engine.qryReloadPositions(position_data)
+        self.__queryUpdateData()
+
+    def onEditorClickBtReloadPosition(self):
+        self.engine.qryReloadPositions()
+        self.engine.qryPositionBasedata()
+        self.__queryUpdateData()
 
     #----------------------------------------------------------------------
     def __onRefreshQuoteBtClicked(self):
@@ -129,7 +148,7 @@ class OptionCalculator(QMainWindow, ui_main_window.Ui_MainWindow):
         self.edit_dialog.wakeupEditor()
         self.engine.qryPositionBasedata()
 
-    def __onPlotGreeksSensibilityClicked(self):
+    def __onPlotBtClicked(self):
         x_axis_type = self.greeks_x_axis_combobox.currentIndex()
         if self.portfolio_checkBox.isChecked():
             id_ls = list()
@@ -147,7 +166,7 @@ class OptionCalculator(QMainWindow, ui_main_window.Ui_MainWindow):
                 elif x_axis_type == 2:
                     self.engine.qryCalGreeksSensibilityByGroup(id_ls, X_AXIS_TYPE.TIME)
                 elif x_axis_type == 3:
-                    pass
+                    self.engine.qryExerciseCurveByGroup(id_ls)
         else:
             row_ls = getSelectedRows(self.position_vtable)
             if row_ls:
@@ -158,7 +177,7 @@ class OptionCalculator(QMainWindow, ui_main_window.Ui_MainWindow):
                 elif x_axis_type == 2:
                     self.engine.qryCalGreeksSensibilityByPosition(row_ls, X_AXIS_TYPE.TIME)
                 elif x_axis_type == 3:
-                    pass
+                    self.engine.qryExerciseCurveByPosition(row_ls)
         return
 
     #-------------------------------------------------------------------
@@ -188,14 +207,18 @@ class OptionCalculator(QMainWindow, ui_main_window.Ui_MainWindow):
         self.is_updating = False
         return
 
+    def __updatePosEditorData(self, pos_table_handler):
+        self.edit_dialog.setEditTableContent(pos_table_handler)
+
     def __plotGreeksSensibility(self, p_data, x_axis_type):
-        figure_name = ''
         if x_axis_type == X_AXIS_TYPE.PRICE:
             figure_name = 'by price'
         elif x_axis_type == X_AXIS_TYPE.VOLATILITY:
             figure_name = 'by volatility'
         elif x_axis_type == X_AXIS_TYPE.TIME:
             figure_name = 'by time'
+        else:
+            figure_name = ''
 
         fig = PLT.figure()
         fig.suptitle(figure_name)
@@ -219,8 +242,19 @@ class OptionCalculator(QMainWindow, ui_main_window.Ui_MainWindow):
         PLT.show()
         return
 
-    def __updatePosEditorData(self, pos_table_handler):
-        self.edit_dialog.setEditTableContent(pos_table_handler)
+    def __plotExerciseCurve(self, plot_data):
+        fig = PLT.figure()
+        fig.suptitle('Theoretical earnings curve')
+
+        sp = fig.add_subplot(1, 1, 1)
+        decorateAndPlot(sp, plot_data['ax_x'], plot_data['exercise_profit'],
+                        central_x=plot_data['central_x'])
+        plotZeroLine(sp)
+
+        PLT.show()
+        return
+
+
 
 
 

@@ -1,7 +1,7 @@
 #coding=utf8
 
-FMT_INT_HEADERS = ('left_days', 'lots', 'dir', 'float_profit', 'margin', 'income',
-                   'ptf_profit', 'ptf_margin', 'ptf_income', 'ptf_principal')
+FMT_INT_HEADERS = ('group', 'left_days', 'lots', 'dir', 'float_profit', 'margin',
+                   'income', 'ptf_profit', 'ptf_margin', 'ptf_income', 'ptf_principal')
 
 FMT_FLOAT_4_HEADERS = ('strike', 'open_price', 'intrnic', 'time_value', 'last_price',
                        'implied_vol')

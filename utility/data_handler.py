@@ -127,6 +127,21 @@ class TableHandler:
             for c in range(0, self.columns):
                 self.table[r][c] = value
 
+    #---------------------------------------------
+    def toDataFrame(self):
+        data_cpy = copy.deepcopy(self.table)
+        for r in range(0, self.rows):
+            for c in range(0, self.columns):
+                if not type(data_cpy[r][c]) is str:
+                    continue
+                try:
+                    nval = float(data_cpy[r][c])
+                    data_cpy[r][c] = nval
+                except:
+                    pass
+        return PD.DataFrame(data_cpy, columns=self.hori_headers)
+
+
 #############################################################
 
 class DataframeHandler:

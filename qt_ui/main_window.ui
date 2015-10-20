@@ -116,22 +116,22 @@
             </property>
             <item>
              <property name="text">
-              <string>by assert price</string>
+              <string>greeks sensibility by assert price</string>
              </property>
             </item>
             <item>
              <property name="text">
-              <string>by volatility</string>
+              <string>greeks sensibility by volatility</string>
              </property>
             </item>
             <item>
              <property name="text">
-              <string>by time</string>
+              <string>greeks sensibility by time</string>
              </property>
             </item>
             <item>
              <property name="text">
-              <string>all of three</string>
+              <string>exercise profit</string>
              </property>
             </item>
            </widget>
@@ -162,9 +162,9 @@
          </widget>
         </item>
         <item row="1" column="1">
-         <widget class="QPushButton" name="greeks_sensibility_button">
+         <widget class="QPushButton" name="plot_button">
           <property name="text">
-           <string>greeks sensibility</string>
+           <string>plot</string>
           </property>
          </widget>
         </item>

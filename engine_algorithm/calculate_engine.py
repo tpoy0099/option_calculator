@@ -23,7 +23,8 @@ class Engine:
         #marketdata service
         self.md  = MarketdataAdaptor()
         #database service
-        self.dp  = DataProxy()
+        self.dp = DataProxy()
+        self.dp.initialize()
         #etf quote
         self.etf = TableHandler()
         self.etf.reset(1, Engine.ETF_QUOTE_HEADERS, -1)
@@ -36,6 +37,10 @@ class Engine:
         self.msg_thread.start()
         self.gui = gui
         return
+
+    def quit(self):
+        self.__pushMsg(MessageTypes.QUIT)
+        self.msg_thread.join()
 
     #-------------------------------------------------------------
     def qryUpdateData(self):
@@ -51,22 +56,26 @@ class Engine:
         self.__pushMsg(MessageTypes.GUI_QUERY_POSITION_BASEDATA_FEED)
 
     def qryCalGreeksSensibilityByGroup(self, group_id_ls, x_axis_type):
-        self.__pushMsg(MessageTypes.GUI_QUERY_CAL_SENSI_PTF,
+        self.__pushMsg(MessageTypes.GUI_QUERY_CAL_SENSI,
                        (group_id_ls, PASS_INDEX_TYPE.GROUP, x_axis_type))
 
     def qryCalGreeksSensibilityByPosition(self, pos_row_idx, x_axis_type):
-        self.__pushMsg(MessageTypes.GUI_QUERY_CAL_SENSI_POS,
+        self.__pushMsg(MessageTypes.GUI_QUERY_CAL_SENSI,
                        (pos_row_idx, PASS_INDEX_TYPE.ROW, x_axis_type))
 
-    def qryReloadPositions(self):
-        self.__pushMsg(MessageTypes.GUI_QUERY_RELOAD_POSITIONS)
+    def qryExerciseCurveByGroup(self, group_id_ls):
+        self.__pushMsg(MessageTypes.GUI_QUERY_EXERCISE_CURVE,
+                       (group_id_ls, PASS_INDEX_TYPE.GROUP))
 
-    def initialize(self):
+    def qryExerciseCurveByPosition(self, pos_row_idx):
+        self.__pushMsg(MessageTypes.GUI_QUERY_EXERCISE_CURVE,
+                       (pos_row_idx, PASS_INDEX_TYPE.ROW))
+
+    def qryReloadPositions(self, positions_data=None):
+        self.__pushMsg(MessageTypes.GUI_QUERY_RELOAD_POSITIONS, positions_data)
+
+    def qryInitialize(self):
         self.__pushMsg(MessageTypes.INITIALIZE)
-
-    def quit(self):
-        self.__pushMsg(MessageTypes.QUIT)
-        self.msg_thread.join()
 
     def __pushMsg(self, msg_type, content=None):
         self.msg.pushMsg(msg_type, content)
@@ -80,9 +89,7 @@ class Engine:
               self.msg_event.clear()
             #update marketdata order by user
             elif msg.type is MessageTypes.UPDATE_QUOTE_DATA:
-                self.__updateQuoteData()
-            elif msg.type is MessageTypes.UPDATE_ALL:
-                pass
+                self.__updateData()
             #qry engine provide table data
             elif msg.type is MessageTypes.GUI_QUERY_TABLE_FEED:
                 self.__feedDataTable()
@@ -93,48 +100,40 @@ class Engine:
             elif msg.type is MessageTypes.GUI_QUERY_POSITION_BASEDATA_FEED:
                 self.__feedPositionBaseData()
             #cal greeks sensibility
-            elif msg.type is MessageTypes.GUI_QUERY_CAL_SENSI_PTF:
+            elif msg.type is MessageTypes.GUI_QUERY_CAL_SENSI:
                 self.__calGreekSensibility(msg.content[0], msg.content[1], msg.content[2])
-            elif msg.type is MessageTypes.GUI_QUERY_CAL_SENSI_POS:
-                self.__calGreekSensibility(msg.content[0], msg.content[1], msg.content[2])
+            elif msg.type is MessageTypes.GUI_QUERY_EXERCISE_CURVE:
+                self.__calOptionExerciseProfitCurve(msg.content[0], msg.content[1])
             #initialize
             elif msg.type is MessageTypes.INITIALIZE:
-                self.__initialize()
+                self.__updateData(True)
             elif msg.type is MessageTypes.GUI_QUERY_RELOAD_POSITIONS:
-                self.__reloadPositions()
+                self.__reloadPositions(msg.content)
             elif msg.type is MessageTypes.QUIT:
                 break
         #thread terminate
         return
 
-    def __initialize(self):
-        self.dp.initialize()
-        self.__updateAll()
+    #-----------------------------------------------------------
+    def __reloadPositions(self, origin_positions):
+        if not origin_positions is None:
+            try:
+                position_df = origin_positions.toDataFrame()
+                self.dp.initialize(position_df)
+            except:
+                self.dp.initialize()
+        else:
+            self.dp.initialize()
+        self.__updateData(True)
         return
 
-    def __reloadPositions(self):
-        self.dp = DataProxy()
-        self.__initialize()
-        self.__feedEtfQuote()
-        self.__feedDataTable()
-        return
-
-    def __updateQuoteData(self):
+    def __updateData(self, update_baseinfo=False):
         self.last_sync_time = DT.datetime.now()
         self.__updateEtfData()
         pos = self.dp.getPositionDataHandler()
         for r in range(0, pos.rows()):
-            self.__updateRow(r)
-        #update database
-        self.dp.updateData()
-        return
-
-    def __updateAll(self):
-        self.last_sync_time = DT.datetime.now()
-        self.__updateEtfData()
-        pos = self.dp.getPositionDataHandler()
-        for r in range(0, pos.rows()):
-            self.__updateRowBaseInfos(r)
+            if update_baseinfo:
+                self.__updateRowBaseInfos(r)
             self.__updateRow(r)
         #update database
         self.dp.updateData()
@@ -237,6 +236,19 @@ class Engine:
             return
 
         self.gui.onRepCalGreeksSensibility(rtn, x_axis_type)
+        return
+
+    def __calOptionExerciseProfitCurve(self, idx_ls, idx_type):
+        if idx_type is PASS_INDEX_TYPE.GROUP:
+            sli_data = self.dp.getPositionDataByGroupId(idx_ls)
+        elif idx_type is PASS_INDEX_TYPE.ROW:
+            sli_data = self.dp.getPositionDataByRowIdx(idx_ls)
+        else:
+            return
+
+        rtn = getExerciseProfitCurve(sli_data, self.etf.getByHeader(0, 'last_price'))
+
+        self.gui.onRepCalExerciseCurve(rtn)
         return
 
 

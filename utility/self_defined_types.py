@@ -16,8 +16,8 @@ class MessageTypes(AutoEnums):
 
     GUI_QUERY_TABLE_FEED = ()
     GUI_QUERY_ETF_QUOTE_FEED = ()
-    GUI_QUERY_CAL_SENSI_PTF = ()
-    GUI_QUERY_CAL_SENSI_POS = ()
+    GUI_QUERY_CAL_SENSI = ()
+    GUI_QUERY_EXERCISE_CURVE = ()
     GUI_QUERY_POSITION_BASEDATA_FEED = ()
 
     GUI_QUERY_RELOAD_POSITIONS = ()
@@ -25,6 +25,7 @@ class MessageTypes(AutoEnums):
     REPLY_TABLE_FEED = ()
     REPLY_ETF_QUOTE_FEED = ()
     REPLY_CAL_SENSI = ()
+    REPLY_EXERCISE_CURVE = ()
     REPLY_POSITION_BASEDATA_FEED = ()
 
 #indicate the x data class
