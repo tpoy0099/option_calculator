@@ -7,7 +7,7 @@ FMT_FLOAT_4_HEADERS = ('strike', 'open_price', 'intrnic', 'time_value', 'last_pr
                        'implied_vol')
 
 FMT_FLOAT_6_HEADERS = ('delta', 'gamma', 'vega', 'theta', 'ptf_delta', 'ptf_gamma',
-                       'ptf_vega')
+                       'ptf_vega', 'ptf_theta')
 
 def getFormedStr(header, value):
     try:

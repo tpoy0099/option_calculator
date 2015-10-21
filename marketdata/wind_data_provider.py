@@ -65,7 +65,7 @@ if __name__ == '__main__':
 
     indata = w.wsq("10000183.SH", "rt_latest")
 
-    basedata = w.wsd("10000419.SH", """us_code,us_name,
+    basedata = w.wsd("510050.SH", """us_code,us_name,
                                     us_type,exe_mode,exe_type,exe_price,
                                     exe_ratio,ptmday,totaltm,startdate,
                                     lasttradingdate,exe_startdate,exe_enddate""",

@@ -1,12 +1,15 @@
 #coding=utf8
+from qt_ui.ui_position_editor import Ui_position_editor_dialog
+from gui_impl.qt_mvc_impl import MatrixModel, AutoFormDelegate
+from gui_impl.qtableview_utility import getSelectedRows
+from utility.data_handler import TableHandler
 
-from qt_ui import ui_position_editor
-from gui_impl.qt_mvc_impl import *
-from gui_impl.qtableview_utility import *
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
 
 ##############################################################################
-class PosEditor(QDialog, ui_position_editor.Ui_position_editor_dialog):
-    EDIT_TABLE_HEADERS = ('group', 'code', 'dir', 'lots', 'open_price', 'margin')
+class PosEditor(QDialog, Ui_position_editor_dialog):
+    EDIT_TABLE_HEADERS = ('group', 'code', 'dir', 'lots', 'open_price', 'margin', 'open_date')
 
     def __init__(self, parent=None):
         super(PosEditor, self).__init__(parent)

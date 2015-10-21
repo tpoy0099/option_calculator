@@ -5,7 +5,7 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 from utility.data_handler import TableHandler
-from gui_impl.display_format import *
+from gui_impl.display_format import getFormedStr
 
 ########################################################################
 class MatrixModel(QAbstractTableModel):
@@ -45,8 +45,8 @@ class MatrixModel(QAbstractTableModel):
     def getValue(self, row, column):
         return self.data.get(row, column)
 
-    #-----------------------------------------------------------
-    #pass
+    def getValueByHeader(self, row, header):
+        return self.data.getByHeader(row, header)
 
     #qt inherit & override
     #-----------------------------------------------------------

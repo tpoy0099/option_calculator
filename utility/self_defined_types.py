@@ -29,11 +29,11 @@ class MessageTypes(AutoEnums):
     REPLY_POSITION_BASEDATA_FEED = ()
 
 #indicate the x data class
-class X_AXIS_TYPE(AutoEnums):
+class XAxisType(AutoEnums):
     PRICE = ()
     VOLATILITY = ()
     TIME = ()
 
-class PASS_INDEX_TYPE(AutoEnums):
+class PassedIndexType(AutoEnums):
     GROUP = ()
     ROW = ()

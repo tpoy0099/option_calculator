@@ -3,7 +3,7 @@ import pandas as PD
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
-from.display_format import *
+from gui_impl.display_format import getFormedStr
 
 #######################################################
 

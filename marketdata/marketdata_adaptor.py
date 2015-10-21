@@ -3,17 +3,16 @@ import datetime as DT
 
 from marketdata.wind_data_provider import WindProvider
 
-
 ##############################################################
 
 WIND_PVD = WindProvider()
 
 class MarketdataAdaptor:
-    def getMultiplier(self, code):
-        if code != '510050':
-            return 10000
-        else:
-            return 100
+    def getOptionMultiplier(self):
+        return 10000
+
+    def getStockMultiplier(self):
+        return 100
 
     def getContractType(self, code):
         rtn_typ = WIND_PVD.getOptionDirType(code)
@@ -21,6 +20,8 @@ class MarketdataAdaptor:
             return 'call'
         elif rtn_typ == '认沽':
             return 'put'
+        elif rtn_typ is None:
+            return 'stock'
         return None
 
     def getStrikePrice(self, code):

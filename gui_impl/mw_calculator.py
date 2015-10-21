@@ -1,19 +1,22 @@
 #coding=utf8
 import threading as THD
-
 import matplotlib.pyplot as PLT
 
-from gui_impl.qt_mvc_impl import *
-from .qtableview_utility import *
-from .position_editor import PosEditor
+from gui_impl.qt_mvc_impl import MatrixModel, AutoFormDelegate
+from gui_impl.position_editor import PosEditor
+from gui_impl.qtableview_utility import getSelectedRows
 from engine_algorithm.calculate_engine import Engine
 from utility.messager import MessageQueue
-from utility.self_defined_types import *
+from utility.self_defined_types import MessageTypes, XAxisType
+from engine_algorithm.database_adaptor import OPTION_DF_HEADERS
+from engine_algorithm.database_adaptor import STOCK_DF_HEADERS
+from engine_algorithm.database_adaptor import PORTFOLIO_DF_HEADERS
 
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
 
 #ui created by qt designer
-from qt_ui import ui_main_window
-
+from qt_ui.ui_main_window import Ui_MainWindow
 
 #############################################################################
 
@@ -30,19 +33,12 @@ def plotZeroLine(sp):
 
 #############################################################################
 
-class OptionCalculator(QMainWindow, ui_main_window.Ui_MainWindow):
-    POSITION_TABLE_HEADERS = ('group', 'code', 'type', 'strike', 'expiry', 'left_days',
-                              'lots', 'dir', 'open_price', 'delta', 'gamma', 'vega',
-                              'theta', 'implied_vol', 'intrnic', 'time_value', 'last_price',
-                              'float_profit', 'margin', 'income')
-
-    PORTFOLIO_TABLE_HEADERS = ('group', 'ptf_profit', 'ptf_delta', 'ptf_gamma',
-                               'ptf_vega', 'ptf_margin', 'ptf_income', 'ptf_principal')
-
-    #-----------------------------------------------------------------------
+class OptionCalculator(QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
         super(OptionCalculator, self).__init__(parent)
         self.setupUi(self)
+        #show
+        self.show()
         #define signal&slot
         self.connect(self.fresh_quotes_button, SIGNAL('clicked()'), self.__onRefreshQuoteBtClicked)
         self.connect(self.edit_position_button, SIGNAL('clicked()'), self.__onEditPosBtClicked)
@@ -52,19 +48,23 @@ class OptionCalculator(QMainWindow, ui_main_window.Ui_MainWindow):
         self.connect(self, SIGNAL('SET_ETF_DISPLAY'), self.__setEtfDataDisplay)
         self.connect(self, SIGNAL('SET_CENTRAL_DISPLAY'), self.__setCentralTableDisplay)
         #init position vtable
-        self.pos_model = MatrixModel(self)
+        self.option_data = MatrixModel(self)
         self.pos_deleg = AutoFormDelegate(self)
         self.position_vtable.setItemDelegate(self.pos_deleg)
-        self.position_vtable.setModel(self.pos_model)
+        self.position_vtable.setModel(self.option_data)
+        self.option_data.setSize(0, OPTION_DF_HEADERS)
+        #init stock_position vtable
+        self.stock_data = MatrixModel(self)
+        self.stpos_deleg = AutoFormDelegate(self)
+        self.stock_position_vtable.setItemDelegate(self.stpos_deleg)
+        self.stock_position_vtable.setModel(self.stock_data)
+        self.stock_data.setSize(0, STOCK_DF_HEADERS)
         #init portfolio vtable
-        self.ptf_model = MatrixModel(self)
+        self.portfolio_data = MatrixModel(self)
         self.ptf_deleg = AutoFormDelegate(self)
         self.portfolio_vtable.setItemDelegate(self.ptf_deleg)
-        self.portfolio_vtable.setModel(self.ptf_model)
-        #show
-        self.pos_model.setSize(0, OptionCalculator.POSITION_TABLE_HEADERS)
-        self.ptf_model.setSize(0, OptionCalculator.PORTFOLIO_TABLE_HEADERS)
-        self.show()
+        self.portfolio_vtable.setModel(self.portfolio_data)
+        self.portfolio_data.setSize(0, PORTFOLIO_DF_HEADERS)
         #gui communication
         self.msg = MessageQueue()
         self.msg_event = THD.Event()
@@ -72,11 +72,12 @@ class OptionCalculator(QMainWindow, ui_main_window.Ui_MainWindow):
         self.msg_thread.start()
         #data engine
         self.engine = Engine(self)
-        self.engine.qryInitialize()
         #flow control
         self.is_updating = False
         self.auto_refresh_timer = None
-        self.__startAutoRefresh()
+        self.__startAutoRefresh(True)
+        self.engine.qryEtfQuoteFeed()
+        self.engine.qryTableDataFeed()
         #qt child
         self.edit_dialog = PosEditor(self)
         self.edit_dialog.setControler(self)
@@ -91,8 +92,8 @@ class OptionCalculator(QMainWindow, ui_main_window.Ui_MainWindow):
         return
 
     #-------------------------------------------------------------------------
-    def onRepTableFeed(self, pos_data, ptf_data):
-        self.__pushMsg(MessageTypes.REPLY_TABLE_FEED, (pos_data, ptf_data))
+    def onRepTableFeed(self, option_data, stock_data, ptf_data):
+        self.__pushMsg(MessageTypes.REPLY_TABLE_FEED, (option_data, stock_data, ptf_data))
 
     def onRepEtfQuoteFeed(self, etf_data):
         self.__pushMsg(MessageTypes.REPLY_ETF_QUOTE_FEED, etf_data)
@@ -114,15 +115,21 @@ class OptionCalculator(QMainWindow, ui_main_window.Ui_MainWindow):
               self.msg_event.clear()
             #received data for display
             elif msg.type is MessageTypes.REPLY_TABLE_FEED:
-                self.emit(SIGNAL('SET_CENTRAL_DISPLAY'), msg.content[0], msg.content[1])
+                self.emit(SIGNAL('SET_CENTRAL_DISPLAY'),
+                          msg.content[0], msg.content[1], msg.content[2])
+
             elif msg.type is MessageTypes.REPLY_ETF_QUOTE_FEED:
                 self.emit(SIGNAL('SET_ETF_DISPLAY'), msg.content)
+
             elif msg.type is MessageTypes.REPLY_CAL_SENSI:
                 self.emit(SIGNAL('PLOT_SENSIBILITY'), msg.content[0], msg.content[1])
+
             elif msg.type is MessageTypes.REPLY_EXERCISE_CURVE:
                 self.emit(SIGNAL('PLOT_EXERCISE_CURVE'), msg.content)
+
             elif msg.type is MessageTypes.REPLY_POSITION_BASEDATA_FEED:
                 self.__updatePosEditorData(msg.content)
+
             elif msg.type is MessageTypes.QUIT:
                 break
         return
@@ -151,40 +158,51 @@ class OptionCalculator(QMainWindow, ui_main_window.Ui_MainWindow):
     def __onPlotBtClicked(self):
         x_axis_type = self.greeks_x_axis_combobox.currentIndex()
         if self.portfolio_checkBox.isChecked():
-            id_ls = list()
+            #collect group id
+            option_idx = list()
             for r in getSelectedRows(self.portfolio_vtable):
-                item = self.ptf_model.getValue(r, 0)
+                item = self.portfolio_data.getValueByHeader(r, 'group')
                 try:
-                    id_ls.append(int(item))
+                    option_idx.append(int(item))
                 except:
                     pass
-            if id_ls:
+            stock_idx = list()
+            for r in getSelectedRows(self.stock_position_vtable):
+                item = self.stock_data.getValueByHeader(r, 'group')
+                try:
+                    stock_idx.append(int(item))
+                except:
+                    pass
+            if option_idx or stock_idx:
                 if x_axis_type == 0:
-                    self.engine.qryCalGreeksSensibilityByGroup(id_ls, X_AXIS_TYPE.PRICE)
+                    self.engine.qryCalGreeksSensibilityByGroup(option_idx, stock_idx, XAxisType.PRICE)
                 elif x_axis_type == 1:
-                    self.engine.qryCalGreeksSensibilityByGroup(id_ls, X_AXIS_TYPE.VOLATILITY)
+                    self.engine.qryCalGreeksSensibilityByGroup(option_idx, stock_idx, XAxisType.VOLATILITY)
                 elif x_axis_type == 2:
-                    self.engine.qryCalGreeksSensibilityByGroup(id_ls, X_AXIS_TYPE.TIME)
+                    self.engine.qryCalGreeksSensibilityByGroup(option_idx, stock_idx, XAxisType.TIME)
                 elif x_axis_type == 3:
-                    self.engine.qryExerciseCurveByGroup(id_ls)
+                    self.engine.qryExerciseCurveByGroup(option_idx, stock_idx)
         else:
-            row_ls = getSelectedRows(self.position_vtable)
-            if row_ls:
+            option_idx = getSelectedRows(self.position_vtable)
+            stock_idx  = getSelectedRows(self.stock_position_vtable)
+            if option_idx or stock_idx:
                 if x_axis_type == 0:
-                    self.engine.qryCalGreeksSensibilityByPosition(row_ls, X_AXIS_TYPE.PRICE)
+                    self.engine.qryCalGreeksSensibilityByPosition(option_idx, stock_idx, XAxisType.PRICE)
                 elif x_axis_type == 1:
-                    self.engine.qryCalGreeksSensibilityByPosition(row_ls, X_AXIS_TYPE.VOLATILITY)
+                    self.engine.qryCalGreeksSensibilityByPosition(option_idx, stock_idx, XAxisType.VOLATILITY)
                 elif x_axis_type == 2:
-                    self.engine.qryCalGreeksSensibilityByPosition(row_ls, X_AXIS_TYPE.TIME)
+                    self.engine.qryCalGreeksSensibilityByPosition(option_idx, stock_idx, XAxisType.TIME)
                 elif x_axis_type == 3:
-                    self.engine.qryExerciseCurveByPosition(row_ls)
+                    self.engine.qryExerciseCurveByPosition(option_idx, stock_idx)
         return
 
     #-------------------------------------------------------------------
-    def __startAutoRefresh(self):
-        self.__queryUpdateData()
+    def __startAutoRefresh(self, onInit=False):
         self.auto_refresh_timer = THD.Timer(300, self.__startAutoRefresh)
         self.auto_refresh_timer.start()
+        if not onInit:
+            self.__queryUpdateData()
+        return
 
     def __queryUpdateData(self):
         if not self.is_updating:
@@ -200,9 +218,10 @@ class OptionCalculator(QMainWindow, ui_main_window.Ui_MainWindow):
         self.etf_lowprice_label.setText('low: %.3f' % etf_data.getByHeader(0, 'low_price'))
         self.etf_lastprice_label.setText('last: %.3f' % etf_data.getByHeader(0, 'last_price'))
 
-    def __setCentralTableDisplay(self, pos_data, ptf_data):
-        self.pos_model.setTableContent(pos_data)
-        self.ptf_model.setTableContent(ptf_data)
+    def __setCentralTableDisplay(self, option_data, stock_data, portfolio_data):
+        self.option_data.setTableContent(option_data)
+        self.stock_data.setTableContent(stock_data)
+        self.portfolio_data.setTableContent(portfolio_data)
         #notify_updating_completed
         self.is_updating = False
         return
@@ -211,11 +230,11 @@ class OptionCalculator(QMainWindow, ui_main_window.Ui_MainWindow):
         self.edit_dialog.setEditTableContent(pos_table_handler)
 
     def __plotGreeksSensibility(self, p_data, x_axis_type):
-        if x_axis_type == X_AXIS_TYPE.PRICE:
+        if x_axis_type == XAxisType.PRICE:
             figure_name = 'by price'
-        elif x_axis_type == X_AXIS_TYPE.VOLATILITY:
+        elif x_axis_type == XAxisType.VOLATILITY:
             figure_name = 'by volatility'
-        elif x_axis_type == X_AXIS_TYPE.TIME:
+        elif x_axis_type == XAxisType.TIME:
             figure_name = 'by time'
         else:
             figure_name = ''

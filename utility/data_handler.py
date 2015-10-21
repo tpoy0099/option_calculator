@@ -70,7 +70,7 @@ class TableHandler:
                 self.setByHeader(r, h, rv.get(r, idx))
         return True
 
-    def copyFromDataframe(self, df=PD.DataFrame()):
+    def copyDataframe(self, df):
         self.table = list()
         self.rows = df.shape[0]
         self.columns = df.shape[1]
@@ -132,11 +132,11 @@ class TableHandler:
         data_cpy = copy.deepcopy(self.table)
         for r in range(0, self.rows):
             for c in range(0, self.columns):
-                if not type(data_cpy[r][c]) is str:
-                    continue
                 try:
-                    nval = float(data_cpy[r][c])
-                    data_cpy[r][c] = nval
+                    num = float(data_cpy[r][c])
+                    if num % 1 == 0:
+                        num = int(num)
+                    data_cpy[r][c] = num
                 except:
                     pass
         return PD.DataFrame(data_cpy, columns=self.hori_headers)
@@ -145,64 +145,64 @@ class TableHandler:
 #############################################################
 
 class DataframeHandler:
-    def __init__(self):
-        self.dataf = None
+    def __init__(self, df=None):
+        self.df = df
 
     def attachToExistedDataframe(self, df):
-        self.dataf = df
+        self.df = df
         return
 
     #def createAndAttachDataframe(self, headers):
     #    self.dataf = PD.DataFrame(columns=headers)
 
     def good(self):
-        return not self.dataf is None
+        return not self.df is None
 
     def getDataFrame(self):
-        return self.dataf
+        return self.df
 
     #----------------------------------------------
     def rows(self):
-        return self.dataf.shape[0]
+        return self.df.shape[0]
 
     def columns(self):
-        return self.dataf.shape[1]
+        return self.df.shape[1]
 
     #return (rows, columns)
     def shape(self):
-        return self.dataf.shape
+        return self.df.shape
 
     #return (header1, header2, ...)
     def headers(self):
-        return tuple(self.dataf.columns)
+        return tuple(self.df.columns)
 
     #return row_indexs (index1, index2, ...)
     def indexs(self):
-        return tuple(self.dataf.index)
+        return tuple(self.df.index)
 
     #get columns index_num
     def getHeaderIndex(self, header):
-        return self.dataf.columns.get_loc(header)
+        return self.df.columns.get_loc(header)
 
     #get cell content, starts from 0
     def get(self, irow, icol):
-        return self.dataf.iat[irow, icol]
+        return self.df.iat[irow, icol]
 
     def getByHeader(self, irow, header):
-        return self.dataf[header].iat[irow]
+        return self.df[header].iat[irow]
 
     def getByIndexAndHeader(self, row_index, header, index_name=None, inner_loc=0):
         if index_name is None:
-            return self.dataf[header][row_index]
+            return self.df[header][row_index]
         else:
-            sli = self.dataf.xs(row_index, level=index_name)
+            sli = self.df.xs(row_index, level=index_name)
             return sli[header].iat[inner_loc]
 
     #----------------------------------------------------------
     #set single cell
     def set(self, irow, icol, new_value):
         try:
-            self.dataf.iloc[irow, icol] = new_value
+            self.df.iloc[irow, icol] = new_value
         except:
             pass
         return
@@ -210,7 +210,7 @@ class DataframeHandler:
     #set single cell locate by header
     def setByHeader(self, irow, header, new_value):
         try:
-            self.dataf[header].iat[irow] = new_value
+            self.df[header].iat[irow] = new_value
         except Exception as err:
             pass
         return
@@ -220,6 +220,6 @@ if __name__ == '__main__':
     th = TableHandler()
     d = PD.DataFrame([[1,1,1,1],[2,2,2,2],[3,3,3,3]])
     print(d)
-    th.copyFromDataframe(d)
+    th.copyDataframe(d)
     for r in th.table:
         print(r)

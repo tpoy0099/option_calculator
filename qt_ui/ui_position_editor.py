@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'position_editor.ui'
 #
-# Created: Tue Oct 20 14:57:25 2015
+# Created: Wed Oct 21 09:46:27 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
