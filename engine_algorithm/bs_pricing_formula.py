@@ -57,15 +57,15 @@ def Gamma(S, K, r, sigma, T):
     return NORM_PDF(BlackScholes_d1(S, K, r, sigma, T)) / (S * sigma * SQRT(T))
 
 def Vega(S, K, r, sigma, T):
-    return NORM_PDF(BlackScholes_d1(S, K, r, sigma, T)) * S * SQRT(T) / 100
+    return NORM_PDF(BlackScholes_d1(S, K, r, sigma, T)) * S * SQRT(T)
 
 def Theta_Call(S, K, r, sigma, T):
     return (-S * sigma * NORM_PDF(BlackScholes_d1(S, K, r, sigma, T)) / (2 * SQRT(T)) -
-            r * K * EXP_F(-r * T) * NORM_CDF(BlackScholes_d2(S, K, r, sigma, T))) / 365
+            r * K * EXP_F(-r * T) * NORM_CDF(BlackScholes_d2(S, K, r, sigma, T)))
 
 def Theta_Put(S, K, r, sigma, T):
     return (-S * sigma * NORM_PDF(BlackScholes_d1(S, K, r, sigma, T)) / (2 * SQRT(T)) +
-            r * K * EXP_F(-r * T) * NORM_CDF(-BlackScholes_d2(S, K, r, sigma, T))) / 365
+            r * K * EXP_F(-r * T) * NORM_CDF(-BlackScholes_d2(S, K, r, sigma, T)))
 
 def Rho_Call(S, K, r, sigma, T):
     return K * T * EXP_F(-r * T) * NORM_CDF(BlackScholes_d2(S, K, r, sigma, T))
@@ -119,7 +119,7 @@ def functional_testing(S0, K0, r0, T0, Call_price0, Put_price0):
         print('BS_price: ', BlackScholes_Call_pricing(S0, K0, r0, sigma0, T0))
         print('Delta for 1.0 price change: ', Delta_Call(S0, K0, r0, sigma0, T0))
         print('Gamma for 1.0 price change: ', Gamma(S0, K0, r0, sigma0, T0))
-        print('Vega for per 100% sigma change: ', Vega(S0, K0, r0, sigma0, T0))
+        print('Vega for per 1% sigma change: ', Vega(S0, K0, r0, sigma0, T0) / 100)
         print('Theta for per year: ', Theta_Call(S0, K0, r0, sigma0, T0))
         print('Theta for per day: ', Theta_Call(S0, K0, r0, sigma0, T0) / 365)
         print('rho for per 100% rho change: ', Rho_Call(S0, K0, r0, sigma0, T0))
@@ -132,7 +132,7 @@ def functional_testing(S0, K0, r0, T0, Call_price0, Put_price0):
         print('BS_price: ', BlackScholes_Put_pricing(S0, K0, r0, sigma0, T0))
         print('Delta for 1.0 price change: ', Delta_Put(S0, K0, r0, sigma0, T0))
         print('Gamma for 1.0 price change: ', Gamma(S0, K0, r0, sigma0, T0))
-        print('Vega for per 100% sigma change: ', Vega(S0, K0, r0, sigma0, T0))
+        print('Vega for per 1% sigma change: ', Vega(S0, K0, r0, sigma0, T0) / 100)
         print('Theta for per year: ', Theta_Put(S0, K0, r0, sigma0, T0))
         print('Theta for per day: ', Theta_Put(S0, K0, r0, sigma0, T0) / 365)
         print('rho for per 100% rho change: ', Rho_Put(S0, K0, r0, sigma0, T0))

@@ -53,13 +53,31 @@ class PosEditor(QDialog, Ui_position_editor_dialog):
         self.model.clearContent()
         self.close()
 
+    @staticmethod
+    def findInvalidRows(t_data=TableHandler()):
+        invalid_rows = list()
+        for r in range(0, t_data.rows):
+            for h in ['group', 'code', 'dir', 'lots', 'open_price']:
+                val = t_data.getByHeader(r, h)
+                if val is None or val == '':
+                    invalid_rows.append(r)
+        return invalid_rows
+
     def onSaveBtClicked(self):
         rtn = QMessageBox.question(self, 'Confirm', 'Save position changes ?',
                                    QMessageBox.Yes, QMessageBox.No)
         if rtn == QMessageBox.Yes:
             data = TableHandler()
             data.copy(self.model.data)
-            self.controler.onEditorClickBtSaveAll(data)
+            invalid_rows = PosEditor.findInvalidRows(data)
+            if invalid_rows:
+                data.delRows(invalid_rows)
+            if data.rows > 0:
+                self.controler.onEditorClickBtSaveAll(data)
+                self.close()
+            else:
+                cf = QMessageBox.warning(self, 'Error',
+                                         'position record invalid !', QMessageBox.Yes)
         return
 
     def onReloadBtClicked(self):

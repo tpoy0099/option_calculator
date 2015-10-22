@@ -32,7 +32,6 @@ def plotZeroLine(sp):
     sp.plot(sp.get_xlim(), [0,0], color="blue", linewidth=0.5, linestyle="-")
 
 #############################################################################
-
 class OptionCalculator(QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
         super(OptionCalculator, self).__init__(parent)
@@ -66,29 +65,52 @@ class OptionCalculator(QMainWindow, Ui_MainWindow):
         self.portfolio_vtable.setModel(self.portfolio_data)
         self.portfolio_data.setSize(0, PORTFOLIO_DF_HEADERS)
         #gui communication
+        self.msg = None
+        self.msg_event = None
+        self.msg_thread = None
+        #data engine
+        self.engine = None
+        #flow control
+        self.is_updating = False
+        self.auto_refresh_timer = None
+        #qt child
+        self.edit_dialog = PosEditor(self)
+        self.edit_dialog.setControler(self)
+        return
+
+    def start(self):
+        #gui communication
         self.msg = MessageQueue()
         self.msg_event = THD.Event()
         self.msg_thread = THD.Thread(target=self.__handleMessage)
         self.msg_thread.start()
         #data engine
         self.engine = Engine(self)
-        #flow control
-        self.is_updating = False
-        self.auto_refresh_timer = None
         self.__startAutoRefresh(True)
         self.engine.qryEtfQuoteFeed()
         self.engine.qryTableDataFeed()
-        #qt child
-        self.edit_dialog = PosEditor(self)
-        self.edit_dialog.setControler(self)
-        return
 
     def quit(self):
         if not self.auto_refresh_timer is None:
             self.auto_refresh_timer.cancel()
-        self.engine.quit()
-        self.__pushMsg(MessageTypes.QUIT)
-        self.msg_thread.join()
+        if not self.engine is None:
+            self.engine.quit()
+        if not self.msg_thread is None:
+            self.__pushMsg(MessageTypes.QUIT)
+            self.msg_thread.join()
+        return
+
+    def closeEvent(self, event):
+        rtn = QMessageBox.question(self, 'Save & exit', 'Save positions to csv?',
+                                   QMessageBox.Save, QMessageBox.No, QMessageBox.Cancel)
+        if rtn == QMessageBox.Cancel:
+            event.ignore()
+            return
+        if rtn == QMessageBox.Save:
+            self.engine.qrySavePositionCsv()
+        self.quit()
+        #close
+        super(OptionCalculator, self).closeEvent(event)
         return
 
     #-------------------------------------------------------------------------
@@ -157,31 +179,26 @@ class OptionCalculator(QMainWindow, Ui_MainWindow):
 
     def __onPlotBtClicked(self):
         x_axis_type = self.greeks_x_axis_combobox.currentIndex()
+        #pass group id list
         if self.portfolio_checkBox.isChecked():
             #collect group id
-            option_idx = list()
+            group_ids = list()
             for r in getSelectedRows(self.portfolio_vtable):
                 item = self.portfolio_data.getValueByHeader(r, 'group')
                 try:
-                    option_idx.append(int(item))
+                    group_ids.append(int(item))
                 except:
                     pass
-            stock_idx = list()
-            for r in getSelectedRows(self.stock_position_vtable):
-                item = self.stock_data.getValueByHeader(r, 'group')
-                try:
-                    stock_idx.append(int(item))
-                except:
-                    pass
-            if option_idx or stock_idx:
+            if group_ids:
                 if x_axis_type == 0:
-                    self.engine.qryCalGreeksSensibilityByGroup(option_idx, stock_idx, XAxisType.PRICE)
+                    self.engine.qryCalGreeksSensibilityByGroup(group_ids, group_ids, XAxisType.PRICE)
                 elif x_axis_type == 1:
-                    self.engine.qryCalGreeksSensibilityByGroup(option_idx, stock_idx, XAxisType.VOLATILITY)
+                    self.engine.qryCalGreeksSensibilityByGroup(group_ids, group_ids, XAxisType.VOLATILITY)
                 elif x_axis_type == 2:
-                    self.engine.qryCalGreeksSensibilityByGroup(option_idx, stock_idx, XAxisType.TIME)
+                    self.engine.qryCalGreeksSensibilityByGroup(group_ids, group_ids, XAxisType.TIME)
                 elif x_axis_type == 3:
-                    self.engine.qryExerciseCurveByGroup(option_idx, stock_idx)
+                    self.engine.qryExerciseCurveByGroup(group_ids, group_ids)
+        #pass row numbers list
         else:
             option_idx = getSelectedRows(self.position_vtable)
             stock_idx  = getSelectedRows(self.stock_position_vtable)

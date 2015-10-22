@@ -79,6 +79,9 @@ class Engine:
     def qryReloadPositions(self, positions_data=None):
         self.__pushMsg(MessageTypes.GUI_QUERY_RELOAD_POSITIONS, positions_data)
 
+    def qrySavePositionCsv(self):
+        self.__pushMsg(MessageTypes.SAVE_POSITION_CSV)
+
     def __pushMsg(self, msg_type, content=None):
         self.msg.pushMsg(msg_type, content)
         self.msg_event.set()
@@ -113,6 +116,9 @@ class Engine:
             elif msg.type is MessageTypes.GUI_QUERY_RELOAD_POSITIONS:
                 self.__reloadPositions(msg.content)
 
+            elif msg.type is MessageTypes.SAVE_POSITION_CSV:
+                self.__savePosition2Csv()
+
             elif msg.type is MessageTypes.QUIT:
                 break
         #thread terminate
@@ -143,6 +149,10 @@ class Engine:
         stock_df = pos.iloc[stock_rows, :]
         self.dp.initialize(option_df, stock_df)
         self.__updateData(True)
+        return
+
+    def __savePosition2Csv(self):
+        DADAPTOR.savePositionCsv(self.ori_positions)
         return
 
     def __updateData(self, update_baseinfo=False):

@@ -28,6 +28,8 @@ class MessageTypes(AutoEnums):
     REPLY_EXERCISE_CURVE = ()
     REPLY_POSITION_BASEDATA_FEED = ()
 
+    SAVE_POSITION_CSV = ()
+
 #indicate the x data class
 class XAxisType(AutoEnums):
     PRICE = ()

@@ -131,9 +131,6 @@
           <widget class="QTableView" name="stock_position_vtable"/>
          </item>
         </layout>
-        <zorder>stock_position_vtable</zorder>
-        <zorder>stock_position_vtable</zorder>
-        <zorder>stock_position_vtable</zorder>
        </widget>
        <widget class="QGroupBox" name="groupBox_2">
         <property name="title">
@@ -231,23 +228,6 @@
      </layout>
     </item>
    </layout>
-  </widget>
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>1024</width>
-     <height>26</height>
-    </rect>
-   </property>
-   <widget class="QMenu" name="menuAbout">
-    <property name="title">
-     <string>about</string>
-    </property>
-    <addaction name="actionAbout"/>
-   </widget>
-   <addaction name="menuAbout"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionAbout">

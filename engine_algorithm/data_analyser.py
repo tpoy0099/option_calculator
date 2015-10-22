@@ -5,7 +5,7 @@ from engine_algorithm import bs_pricing_formula as BS
 
 ######################################################################
 #trading days per year
-DAYS_PER_YEAR = 250
+DAYS_PER_YEAR = 365
 #interest_rate
 INT_R = 0.03
 
@@ -61,8 +61,8 @@ def getStatistics(S, K, T, opt_price, is_call, volatility=None):
             volatility = res['implied_vol']
         res['delta'] = BS.Delta_Call(S, K, INT_R, volatility, T)
         res['gamma'] = BS.Gamma(S, K, INT_R, volatility, T)
-        res['vega'] = BS.Vega(S, K, INT_R, volatility, T)
-        res['theta'] = BS.Theta_Call(S, K, INT_R, volatility, T)
+        res['vega'] = BS.Vega(S, K, INT_R, volatility, T) / 100
+        res['theta'] = BS.Theta_Call(S, K, INT_R, volatility, T) / DAYS_PER_YEAR
         res['intrnic'] = getIntrinsicValue(K, S, True)
         res['time_value'] = getTimeValue(K, S, opt_price, True)
     else:
@@ -71,56 +71,65 @@ def getStatistics(S, K, T, opt_price, is_call, volatility=None):
             volatility = res['implied_vol']
         res['delta'] = BS.Delta_Put(S, K, INT_R, volatility, T)
         res['gamma'] = BS.Gamma(S, K, INT_R, volatility, T)
-        res['vega'] = BS.Vega(S, K, INT_R, volatility, T)
-        res['theta'] = BS.Theta_Put(S, K, INT_R, volatility, T)
+        res['vega'] = BS.Vega(S, K, INT_R, volatility, T) / 100
+        res['theta'] = BS.Theta_Put(S, K, INT_R, volatility, T) / DAYS_PER_YEAR
         res['intrnic'] = getIntrinsicValue(K, S, False)
         res['time_value'] = getTimeValue(K, S, opt_price, False)
     return res
 
 #-----------------------------------------------------------------
+#return a list fill with imp_vol align by row number
+#volatility.rows == option_df.rows
+def getImpliedVolArray(option_df, asset_price):
+    volatility = list()
+    for r in range(0, option_df.shape[0]):
+        row = option_df.iloc[r, :]
+        if row['type'] == 'call':
+            vol_f = BS.Implied_volatility_Call
+        elif row['type'] == 'put':
+            vol_f = BS.Implied_volatility_Put
+        else:
+            raise Exception('getImpliedVol with a None option data .')
+        #fill
+        volatility.append(vol_f(asset_price, row['strike'], INT_R,
+                                row['left_days'] / DAYS_PER_YEAR,
+                                row['last_price']))
+    return volatility
+
+def sumStocksDelta(stock_df):
+    stock_delta = 0
+    for r in range(0, stock_df.shape[0]):
+        row = stock_df.iloc[r, :]
+        stock_delta += 1 * 100 / 10000 * row['dir'] * row['lots']
+    return stock_delta
+
 def getGreeksSensibilityByTime(opt_df, stk_df, asset_price):
     res = {'central_x': 1, 'ax_x' : list(), 'delta': list(),
            'gamma': list(), 'vega' : list(), 'theta': list()}
-
+    #expand x_axis range
     x_lower = 0.1
     x_upper = 2
     step_len = (x_upper - x_lower) / 60
     res['ax_x'] = [x_lower + s * step_len for s in range(0, 60)]
-
-    vol_arr = list()
-    for r in range(0, opt_df.shape[0]):
-        row = opt_df.iloc[r, :]
-        if row['type'] == 'call':
-            vol_arr.append(BS.Implied_volatility_Call(asset_price, row['strike'], INT_R,
-                                                     row['left_days']/DAYS_PER_YEAR,
-                                                     row['last_price']))
-        else:
-            vol_arr.append(BS.Implied_volatility_Put(asset_price, row['strike'], INT_R,
-                                                    row['left_days']/DAYS_PER_YEAR,
-                                                    row['last_price']))
-    #stocks delta = 1
-    stock_delta = 0
-    for r in range(0, stk_df.shape[0]):
-        row = stk_df.iloc[r, :]
-        multi = 100 / 10000 * row['dir'] * row['lots']
-        stock_delta += 1 * multi
+    #get data
+    volatility = getImpliedVolArray(opt_df, asset_price)
+    stock_delta = sumStocksDelta(stk_df)
     #option
     for F in res['ax_x']:
         delta = stock_delta
-        gamma, vega, theta, idx = 0, 0, 0, 0
+        gamma, vega, theta = 0, 0, 0
         for r in range(0, opt_df.shape[0]):
             row = opt_df.iloc[r, :]
             rtn = getStatistics(asset_price, row['strike'],
                                 row['left_days'] * F,
                                 row['last_price'],
                                 row['type'] == 'call',
-                                vol_arr[idx])
+                                volatility[r])
             multi = row['dir'] * row['lots']
             delta += rtn['delta'] * multi
             gamma += rtn['gamma'] * multi
             vega  += rtn['vega']  * multi
             theta += rtn['theta'] * multi
-            idx += 1
         #save one resault
         res['delta'].append(delta)
         res['gamma'].append(gamma)
@@ -131,47 +140,30 @@ def getGreeksSensibilityByTime(opt_df, stk_df, asset_price):
 def getGreeksSensibilityByVolatility(opt_df, stk_df, asset_price):
     res = {'central_x': 1, 'ax_x' : list(), 'delta': list(),
            'gamma': list(), 'vega' : list(), 'theta': list()}
-
+    #expand x_axis range
     x_lower  = 0.1
     x_upper  = 2
     step_len = (x_upper - x_lower) / 60
     res['ax_x'] = [x_lower + s * step_len for s in range(0, 60)]
-
-    vol_arr = list()
-    for r in range(0, opt_df.shape[0]):
-        row = opt_df.iloc[r, :]
-        if row['type'] == 'call':
-            vol_arr.append(BS.Implied_volatility_Call(asset_price, row['strike'], INT_R,
-                                                     row['left_days']/DAYS_PER_YEAR,
-                                                     row['last_price']))
-        else:
-            vol_arr.append(BS.Implied_volatility_Put(asset_price, row['strike'], INT_R,
-                                                    row['left_days']/DAYS_PER_YEAR,
-                                                    row['last_price']))
-
-    #stocks delta = 1
-    stock_delta = 0
-    for r in range(0, stk_df.shape[0]):
-        row = stk_df.iloc[r, :]
-        multi = 100 / 10000 * row['dir'] * row['lots']
-        stock_delta += 1 * multi
+    #get data
+    volatility = getImpliedVolArray(opt_df, asset_price)
+    stock_delta = sumStocksDelta(stk_df)
     #option
     for F in res['ax_x']:
         delta = stock_delta
-        gamma, vega, theta, idx = 0, 0, 0, 0
+        gamma, vega, theta = 0, 0, 0
         for r in range(0, opt_df.shape[0]):
             row = opt_df.iloc[r, :]
             rtn = getStatistics(asset_price, row['strike'],
                                 row['left_days'],
                                 row['last_price'],
                                 row['type'] == 'call',
-                                vol_arr[idx] * F)
+                                volatility[r] * F)
             multi = row['dir'] * row['lots']
             delta += rtn['delta'] * multi
             gamma += rtn['gamma'] * multi
             vega  += rtn['vega']  * multi
             theta += rtn['theta'] * multi
-            idx += 1
         #save one resault
         res['delta'].append(delta)
         res['gamma'].append(gamma)
@@ -182,47 +174,30 @@ def getGreeksSensibilityByVolatility(opt_df, stk_df, asset_price):
 def getGreeksSensibilityByPrice(opt_df, stk_df, asset_price):
     res = {'central_x': asset_price, 'ax_x' : list(), 'delta': list(),
            'gamma': list(), 'vega' : list(), 'theta': list()}
-
+    #expand x_axis range
     x_lower  = asset_price * 0.7
     x_upper  = asset_price * 1.3
     step_len = (x_upper - x_lower) / 60
     res['ax_x'] = [x_lower + s * step_len for s in range(0, 60)]
-
-    vol_arr = list()
-    for r in range(0, opt_df.shape[0]):
-        row = opt_df.iloc[r, :]
-        if row['type'] == 'call':
-            vol_arr.append(BS.Implied_volatility_Call(asset_price, row['strike'], INT_R,
-                                                      row['left_days']/DAYS_PER_YEAR,
-                                                      row['last_price']))
-        else:
-            vol_arr.append(BS.Implied_volatility_Put(asset_price, row['strike'], INT_R,
-                                                     row['left_days']/DAYS_PER_YEAR,
-                                                     row['last_price']))
-
-    #stocks delta = 1
-    stock_delta = 0
-    for r in range(0, stk_df.shape[0]):
-        row = stk_df.iloc[r, :]
-        multi = 100 / 10000 * row['dir'] * row['lots']
-        stock_delta += 1 * multi
+    #get data
+    volatility = getImpliedVolArray(opt_df, asset_price)
+    stock_delta = sumStocksDelta(stk_df)
     #options
     for S in res['ax_x']:
         delta = stock_delta
-        gamma, vega, theta, idx = 0, 0, 0, 0
+        gamma, vega, theta = 0, 0, 0
         for r in range(0, opt_df.shape[0]):
             row = opt_df.iloc[r, :]
             rtn = getStatistics(S, row['strike'],
                                 row['left_days'],
                                 row['last_price'],
                                 row['type'] == 'call',
-                                vol_arr[idx])
+                                volatility[r])
             multi = row['dir'] * row['lots']
             delta += rtn['delta'] * multi
             gamma += rtn['gamma'] * multi
             vega  += rtn['vega']  * multi
             theta += rtn['theta'] * multi
-            idx += 1
         #save one resault
         res['delta'].append(delta)
         res['gamma'].append(gamma)

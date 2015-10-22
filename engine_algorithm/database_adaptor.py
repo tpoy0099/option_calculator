@@ -5,19 +5,21 @@ from utility.data_handler import DataframeHandler
 IDX = PD.IndexSlice
 EMPTY_DATAFRAME = PD.DataFrame()
 #################################################
+POSITION_CSV_FILE = r'./positions.csv'
+
 OPTION_DF_HEADERS = ('group', 'code', 'type', 'strike', 'expiry', 'left_days',
                      'lots', 'dir', 'open_price', 'delta', 'gamma', 'vega',
                      'theta', 'implied_vol', 'intrnic', 'time_value', 'last_price',
                      'float_profit', 'margin', 'income', 'open_date')
 
 STOCK_DF_HEADERS = ('group', 'code', 'lots', 'dir', 'open_price',
-                    'last_price', 'float_profit', 'margin', 'open_date')
+                    'last_price', 'float_profit', 'equivalent_delta', 'margin', 'open_date')
 
 PORTFOLIO_DF_HEADERS = ('group', 'ptf_profit', 'ptf_delta', 'ptf_gamma', 'ptf_vega',
                         'ptf_theta', 'ptf_margin', 'ptf_income', 'ptf_principal')
 
 ##################################################
-def loadPositionCsv(csvfile=r'./positions.csv'):
+def loadPositionCsv(csvfile=POSITION_CSV_FILE):
     try:
         df = PD.read_csv(csvfile, parse_dates=True, skip_blank_lines=True)
         df['code'] = df['code'].astype(str)
@@ -25,6 +27,13 @@ def loadPositionCsv(csvfile=r'./positions.csv'):
         return None, err
     else:
         return df, None
+
+def savePositionCsv(position_df, csvfile=POSITION_CSV_FILE):
+    try:
+        position_df.to_csv(csvfile, index=False)
+    except:
+        pass
+    return
 
 ###################################################
 class PortfolioPositions:
@@ -52,7 +61,8 @@ class PortfolioPositions:
                                     * self.option_df['open_price'] * self.option_multiplier
                                     * -1)
         #set multi index
-        self.option_df = self.option_df.set_index([self.option_df['group'], self.option_df.index], drop=False)
+        row_idx = list(range(0, self.option_df.shape[0]))
+        self.option_df = self.option_df.set_index([self.option_df['group'], row_idx], drop=False)
         self.option_df.index.names = ['group_id', 'rows']
         return
 
@@ -61,11 +71,14 @@ class PortfolioPositions:
         for header in df.columns:
             if header in STOCK_DF_HEADERS:
                 self.stock_df[header] = df[header].copy()
-        #fill margin
+        #fill margin and delta
         self.stock_df['margin'] = (self.stock_df['lots'] * self.stock_df['dir']
                                    * self.stock_df['open_price'] * self.stock_multiplier)
+        self.stock_df['equivalent_delta'] = (self.stock_df['lots'] * self.stock_df['dir']
+                                             * self.stock_multiplier / self.option_multiplier)
         #set multi index
-        self.stock_df = self.stock_df.set_index([self.stock_df['group'], self.stock_df.index], drop=False)
+        row_idx = list(range(0, self.stock_df.shape[0]))
+        self.stock_df = self.stock_df.set_index([self.stock_df['group'], row_idx], drop=False)
         self.stock_df.index.names = ['group_id', 'rows']
         return
 
