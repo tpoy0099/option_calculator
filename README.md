@@ -6,7 +6,9 @@ version0.0.2
 底层库类依赖:    
 python3.x   
 pyqt, matplotlib, pandas, numpy, scipy    
-(建议直接安装anaconda3-x86-64)    
+(建议直接安装anaconda3-x86-64)   
+https://3230d63b5fc54e62148e-c95ac804525aac4b6dba79b00b39d1d3.ssl.cf1.rackcdn.com/Anaconda3-2.3.0-Windows-x86_64.exe 
+    
     
 计划(已)实现功能:    
 单个期权头寸统计量计算&监控(已填)    

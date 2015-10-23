@@ -220,7 +220,7 @@ def getExerciseProfitCurve(opt_df, stk_df, asset_price):
     res['ax_x'] = list(section_point)
     res['ax_x'].sort()
 
-    net_cost = (opt_df['open_price'] * -opt_df['dir'] * opt_df['lots']).sum()
+    net_cost = (opt_df['open_price'] * -opt_df['dir'] * opt_df['lots']).sum() * 10000
 
     for price in res['ax_x']:
         profit = net_cost
