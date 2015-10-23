@@ -36,11 +36,11 @@ portfolio的复选框勾选时,使用portfolio表中选中的所有行的group_i
     
 安装:    
 安装anaconda3    
-用wind客户端修复python插件(WindPy)
-启动wind并登录
-解压缩option_monitor到任意目录
-运行exec_run.pyw
-
+用wind客户端修复python插件(WindPy)    
+启动wind并登录    
+解压缩option_monitor到任意目录    
+运行exec_run.pyw    
+    
 恳请各位路过又恰巧有wind终端的大牛帮忙试用,多提意见    
 mail: tpoy@live.cn
 
