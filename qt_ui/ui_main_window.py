@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'main_window.ui'
 #
-# Created: Wed Oct 21 09:46:27 2015
+# Created: Thu Oct 22 15:37:08 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -127,27 +127,19 @@ class Ui_MainWindow(object):
         self.portfolio_checkBox.setObjectName(_fromUtf8("portfolio_checkBox"))
         self.horizontalLayout_2.addWidget(self.portfolio_checkBox)
         self.gridLayout.addLayout(self.horizontalLayout_2, 0, 1, 1, 1)
-        self.edit_position_button = QtGui.QPushButton(self.centralwidget)
-        self.edit_position_button.setObjectName(_fromUtf8("edit_position_button"))
-        self.gridLayout.addWidget(self.edit_position_button, 1, 0, 1, 1)
         self.plot_button = QtGui.QPushButton(self.centralwidget)
         self.plot_button.setObjectName(_fromUtf8("plot_button"))
         self.gridLayout.addWidget(self.plot_button, 1, 1, 1, 1)
+        self.edit_position_button = QtGui.QPushButton(self.centralwidget)
+        self.edit_position_button.setObjectName(_fromUtf8("edit_position_button"))
+        self.gridLayout.addWidget(self.edit_position_button, 1, 0, 1, 1)
         self.gridLayout_5.addLayout(self.gridLayout, 2, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
-        self.menubar = QtGui.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1024, 26))
-        self.menubar.setObjectName(_fromUtf8("menubar"))
-        self.menuAbout = QtGui.QMenu(self.menubar)
-        self.menuAbout.setObjectName(_fromUtf8("menuAbout"))
-        MainWindow.setMenuBar(self.menubar)
         self.statusBar = QtGui.QStatusBar(MainWindow)
         self.statusBar.setObjectName(_fromUtf8("statusBar"))
         MainWindow.setStatusBar(self.statusBar)
         self.actionAbout = QtGui.QAction(MainWindow)
         self.actionAbout.setObjectName(_fromUtf8("actionAbout"))
-        self.menuAbout.addAction(self.actionAbout)
-        self.menubar.addAction(self.menuAbout.menuAction())
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -169,8 +161,7 @@ class Ui_MainWindow(object):
         self.greeks_x_axis_combobox.setItemText(2, _translate("MainWindow", "greeks sensibility by time", None))
         self.greeks_x_axis_combobox.setItemText(3, _translate("MainWindow", "exercise profit", None))
         self.portfolio_checkBox.setText(_translate("MainWindow", "portfolio", None))
-        self.edit_position_button.setText(_translate("MainWindow", "edit position", None))
         self.plot_button.setText(_translate("MainWindow", "plot", None))
-        self.menuAbout.setTitle(_translate("MainWindow", "about", None))
+        self.edit_position_button.setText(_translate("MainWindow", "edit position", None))
         self.actionAbout.setText(_translate("MainWindow", "about", None))
 

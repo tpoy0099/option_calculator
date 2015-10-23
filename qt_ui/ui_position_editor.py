@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'position_editor.ui'
 #
-# Created: Wed Oct 21 09:46:27 2015
+# Created: Thu Oct 22 15:37:08 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -35,8 +35,8 @@ class Ui_position_editor_dialog(object):
         self.position_edit_vtable.setAlternatingRowColors(True)
         self.position_edit_vtable.setObjectName(_fromUtf8("position_edit_vtable"))
         self.horizontalLayout.addWidget(self.position_edit_vtable)
-        self.verticalLayout_2 = QtGui.QVBoxLayout()
-        self.verticalLayout_2.setObjectName(_fromUtf8("verticalLayout_2"))
+        self.verticalLayout_4 = QtGui.QVBoxLayout()
+        self.verticalLayout_4.setObjectName(_fromUtf8("verticalLayout_4"))
         self.verticalLayout_3 = QtGui.QVBoxLayout()
         self.verticalLayout_3.setObjectName(_fromUtf8("verticalLayout_3"))
         self.addrow_button = QtGui.QPushButton(position_editor_dialog)
@@ -45,14 +45,20 @@ class Ui_position_editor_dialog(object):
         self.delrows_button = QtGui.QPushButton(position_editor_dialog)
         self.delrows_button.setObjectName(_fromUtf8("delrows_button"))
         self.verticalLayout_3.addWidget(self.delrows_button)
-        self.verticalLayout_2.addLayout(self.verticalLayout_3)
+        self.verticalLayout_4.addLayout(self.verticalLayout_3)
         spacerItem = QtGui.QSpacerItem(20, 50, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.MinimumExpanding)
-        self.verticalLayout_2.addItem(spacerItem)
+        self.verticalLayout_4.addItem(spacerItem)
+        self.verticalLayout_2 = QtGui.QVBoxLayout()
+        self.verticalLayout_2.setObjectName(_fromUtf8("verticalLayout_2"))
         self.reload_button = QtGui.QPushButton(position_editor_dialog)
         self.reload_button.setObjectName(_fromUtf8("reload_button"))
         self.verticalLayout_2.addWidget(self.reload_button)
+        self.save_csv_button = QtGui.QPushButton(position_editor_dialog)
+        self.save_csv_button.setObjectName(_fromUtf8("save_csv_button"))
+        self.verticalLayout_2.addWidget(self.save_csv_button)
+        self.verticalLayout_4.addLayout(self.verticalLayout_2)
         spacerItem1 = QtGui.QSpacerItem(20, 30, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.MinimumExpanding)
-        self.verticalLayout_2.addItem(spacerItem1)
+        self.verticalLayout_4.addItem(spacerItem1)
         self.verticalLayout = QtGui.QVBoxLayout()
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.save_button = QtGui.QPushButton(position_editor_dialog)
@@ -61,8 +67,8 @@ class Ui_position_editor_dialog(object):
         self.cancel_button = QtGui.QPushButton(position_editor_dialog)
         self.cancel_button.setObjectName(_fromUtf8("cancel_button"))
         self.verticalLayout.addWidget(self.cancel_button)
-        self.verticalLayout_2.addLayout(self.verticalLayout)
-        self.horizontalLayout.addLayout(self.verticalLayout_2)
+        self.verticalLayout_4.addLayout(self.verticalLayout)
+        self.horizontalLayout.addLayout(self.verticalLayout_4)
         self.gridLayout.addLayout(self.horizontalLayout, 0, 0, 1, 1)
 
         self.retranslateUi(position_editor_dialog)
@@ -73,6 +79,7 @@ class Ui_position_editor_dialog(object):
         self.addrow_button.setText(_translate("position_editor_dialog", "add row", None))
         self.delrows_button.setText(_translate("position_editor_dialog", "delete", None))
         self.reload_button.setText(_translate("position_editor_dialog", "reload csv", None))
+        self.save_csv_button.setText(_translate("position_editor_dialog", "save to csv", None))
         self.save_button.setText(_translate("position_editor_dialog", "save all", None))
         self.cancel_button.setText(_translate("position_editor_dialog", "cancel", None))
 

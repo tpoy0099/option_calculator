@@ -17,8 +17,9 @@ class PosEditor(QDialog, Ui_position_editor_dialog):
         self.setModal(True)
         #signal&slot
         self.connect(self.cancel_button, SIGNAL("clicked()"), self.onCancelBtClicked)
-        self.connect(self.save_button, SIGNAL("clicked()"), self.onSaveBtClicked)
+        self.connect(self.save_button, SIGNAL("clicked()"), self.onSaveAllBtClicked)
         self.connect(self.reload_button, SIGNAL("clicked()"), self.onReloadBtClicked)
+        self.connect(self.save_csv_button, SIGNAL("clicked()"), self.onSaveCsvBtClicked)
         self.connect(self.addrow_button, SIGNAL("clicked()"), self.onAddrowBtClicked)
         self.connect(self.delrows_button, SIGNAL("clicked()"), self.onDelRowBtClicked)
         #init mvc impl
@@ -63,7 +64,7 @@ class PosEditor(QDialog, Ui_position_editor_dialog):
                     invalid_rows.append(r)
         return invalid_rows
 
-    def onSaveBtClicked(self):
+    def onSaveAllBtClicked(self):
         rtn = QMessageBox.question(self, 'Confirm', 'Save position changes ?',
                                    QMessageBox.Yes, QMessageBox.No)
         if rtn == QMessageBox.Yes:
@@ -85,6 +86,13 @@ class PosEditor(QDialog, Ui_position_editor_dialog):
                                    QMessageBox.Yes, QMessageBox.No)
         if rtn == QMessageBox.Yes:
             self.controler.onEditorClickBtReloadPosition()
+        return
+
+    def onSaveCsvBtClicked(self):
+        rtn = QMessageBox.question(self, 'Confirm', 'write positions to position.csv ?',
+                                   QMessageBox.Yes, QMessageBox.No)
+        if rtn == QMessageBox.Yes:
+            self.controler.onSavePosition2Csv()
         return
 
 #######################################################################

@@ -107,7 +107,7 @@ class OptionCalculator(QMainWindow, Ui_MainWindow):
             event.ignore()
             return
         if rtn == QMessageBox.Save:
-            self.engine.qrySavePositionCsv()
+            self.onSavePosition2Csv()
         self.quit()
         #close
         super(OptionCalculator, self).closeEvent(event)
@@ -168,6 +168,9 @@ class OptionCalculator(QMainWindow, Ui_MainWindow):
         self.engine.qryReloadPositions()
         self.engine.qryPositionBasedata()
         self.__queryUpdateData()
+
+    def onSavePosition2Csv(self):
+        self.engine.qrySavePositionCsv()
 
     #----------------------------------------------------------------------
     def __onRefreshQuoteBtClicked(self):
