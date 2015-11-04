@@ -1,0 +1,4 @@
+>>2015-11-04 15:15:49.033842
+unsupported operand type(s) for -: 'str' and 'float'
+>>2015-11-04 15:46:35.979482
+can't multiply sequence by non-int of type 'float'

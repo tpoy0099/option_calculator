@@ -1,5 +1,6 @@
 #coding=utf8
 import threading as THD
+import datetime as DT
 import matplotlib.pyplot as PLT
 
 from gui_impl.qt_mvc_impl import MatrixModel, AutoFormDelegate
@@ -46,6 +47,7 @@ class OptionCalculator(QMainWindow, Ui_MainWindow):
         self.connect(self, SIGNAL('PLOT_EXERCISE_CURVE'), self.__plotExerciseCurve)
         self.connect(self, SIGNAL('SET_ETF_DISPLAY'), self.__setEtfDataDisplay)
         self.connect(self, SIGNAL('SET_CENTRAL_DISPLAY'), self.__setCentralTableDisplay)
+        self.connect(self, SIGNAL('ENGINE_ERROR'), self.__notifyErrorOccur)
         #init position vtable
         self.option_data = MatrixModel(self)
         self.pos_deleg = AutoFormDelegate(self)
@@ -114,6 +116,13 @@ class OptionCalculator(QMainWindow, Ui_MainWindow):
         return
 
     #-------------------------------------------------------------------------
+    def onEngineError(self, err):
+        with open(r'./logs.txt', 'a') as fid:
+            err_info = '\n>>%s\n%s' % (str(DT.datetime.now()), str(err))
+            fid.write(err_info)
+        self.emit(SIGNAL('ENGINE_ERROR'))
+        return
+
     def onRepTableFeed(self, option_data, stock_data, ptf_data):
         self.__pushMsg(MessageTypes.REPLY_TABLE_FEED, (option_data, stock_data, ptf_data))
 
@@ -292,6 +301,10 @@ class OptionCalculator(QMainWindow, Ui_MainWindow):
 
         PLT.show()
         return
+
+    def __notifyErrorOccur(self):
+        QMessageBox.question(self, 'Error', 'engine error occurs, restart manually ...',
+                             QMessageBox.Yes)
 
 
 

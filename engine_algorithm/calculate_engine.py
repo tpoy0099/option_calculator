@@ -87,40 +87,44 @@ class Engine:
         self.msg_event.set()
 
     def __handleMessage(self):
-        while True:
-            msg = self.msg.getMsg()
-            if msg is None:
-              self.msg_event.wait()
-              self.msg_event.clear()
-            #update marketdata order by user
-            elif msg.type is MessageTypes.UPDATE_QUOTE_DATA:
-                self.__updateData()
-            #qry engine provide table data
-            elif msg.type is MessageTypes.GUI_QUERY_TABLE_FEED:
-                self.__feedDataTable()
-            #qry etf data
-            elif msg.type is MessageTypes.GUI_QUERY_ETF_QUOTE_FEED:
-                self.__feedEtfQuote()
-            #qry position base data for editor
-            elif msg.type is MessageTypes.GUI_QUERY_POSITION_BASEDATA_FEED:
-                self.__feedPositionBaseData()
-            #cal greeks sensibility
-            elif msg.type is MessageTypes.GUI_QUERY_CAL_SENSI:
-                self.__calGreekSensibility(msg.content[0], msg.content[1],
-                                           msg.content[2], msg.content[3])
+        try:
+            while True:
+                msg = self.msg.getMsg()
+                if msg is None:
+                  self.msg_event.wait()
+                  self.msg_event.clear()
+                #update marketdata order by user
+                elif msg.type is MessageTypes.UPDATE_QUOTE_DATA:
+                    self.__updateData()
+                #qry engine provide table data
+                elif msg.type is MessageTypes.GUI_QUERY_TABLE_FEED:
+                    self.__feedDataTable()
+                #qry etf data
+                elif msg.type is MessageTypes.GUI_QUERY_ETF_QUOTE_FEED:
+                    self.__feedEtfQuote()
+                #qry position base data for editor
+                elif msg.type is MessageTypes.GUI_QUERY_POSITION_BASEDATA_FEED:
+                    self.__feedPositionBaseData()
+                #cal greeks sensibility
+                elif msg.type is MessageTypes.GUI_QUERY_CAL_SENSI:
+                    self.__calGreekSensibility(msg.content[0], msg.content[1],
+                                               msg.content[2], msg.content[3])
 
-            elif msg.type is MessageTypes.GUI_QUERY_EXERCISE_CURVE:
-                self.__calOptionExerciseProfitCurve(msg.content[0], msg.content[1],
-                                                    msg.content[2])
+                elif msg.type is MessageTypes.GUI_QUERY_EXERCISE_CURVE:
+                    self.__calOptionExerciseProfitCurve(msg.content[0], msg.content[1],
+                                                        msg.content[2])
 
-            elif msg.type is MessageTypes.GUI_QUERY_RELOAD_POSITIONS:
-                self.__reloadPositions(msg.content)
+                elif msg.type is MessageTypes.GUI_QUERY_RELOAD_POSITIONS:
+                    self.__reloadPositions(msg.content)
 
-            elif msg.type is MessageTypes.SAVE_POSITION_CSV:
-                self.__savePosition2Csv()
+                elif msg.type is MessageTypes.SAVE_POSITION_CSV:
+                    self.__savePosition2Csv()
 
-            elif msg.type is MessageTypes.QUIT:
-                break
+                elif msg.type is MessageTypes.QUIT:
+                    break
+
+        except Exception as err:
+            self.gui.onEngineError(err)
         #thread terminate
         return
 

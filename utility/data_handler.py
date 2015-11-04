@@ -9,10 +9,6 @@ class TableHandler:
         self.columns = 0
         self.hori_headers = tuple()
 
-    #def rows(self):
-    #def columns(self):
-    #def hori_headers(self):
-
     def getHoriHeader(self, index):
         try:
             return self.hori_headers[index]

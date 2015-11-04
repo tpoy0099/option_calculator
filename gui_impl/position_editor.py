@@ -58,14 +58,14 @@ class PosEditor(QDialog, Ui_position_editor_dialog):
     def findInvalidRows(t_data=TableHandler()):
         invalid_rows = list()
         for r in range(0, t_data.rows):
-            for h in ['group', 'code', 'dir', 'lots', 'open_price']:
+            for h in ['group', 'code', 'dir', 'lots', 'open_price', 'margin']:
                 val = t_data.getByHeader(r, h)
                 if val is None or val == '':
                     invalid_rows.append(r)
         return invalid_rows
 
     def onSaveAllBtClicked(self):
-        rtn = QMessageBox.question(self, 'Confirm', 'Save position changes ?',
+        rtn = QMessageBox.question(self, 'Confirm', 'Save position changes?',
                                    QMessageBox.Yes, QMessageBox.No)
         if rtn == QMessageBox.Yes:
             data = TableHandler()
@@ -75,21 +75,26 @@ class PosEditor(QDialog, Ui_position_editor_dialog):
                 data.delRows(invalid_rows)
             if data.rows > 0:
                 self.controler.onEditorClickBtSaveAll(data)
-                self.close()
             else:
-                cf = QMessageBox.warning(self, 'Error',
-                                         'position record invalid !', QMessageBox.Yes)
+                QMessageBox.warning(self, 'Error',
+                                    'None valid records!', QMessageBox.Yes)
+            #notify
+            if invalid_rows:
+                info_str = 'Invalid rows deleted:\n%s' % str([i+1 for i in invalid_rows])
+                QMessageBox.warning(self, 'Warning', info_str, QMessageBox.Yes)
+            else:
+                self.close()
         return
 
     def onReloadBtClicked(self):
-        rtn = QMessageBox.question(self, 'Confirm', 'Reload from position.csv ?',
+        rtn = QMessageBox.question(self, 'Confirm', 'Reloading from position.csv?',
                                    QMessageBox.Yes, QMessageBox.No)
         if rtn == QMessageBox.Yes:
             self.controler.onEditorClickBtReloadPosition()
         return
 
     def onSaveCsvBtClicked(self):
-        rtn = QMessageBox.question(self, 'Confirm', 'write positions to position.csv ?',
+        rtn = QMessageBox.question(self, 'Confirm', 'Writing positions to position.csv?',
                                    QMessageBox.Yes, QMessageBox.No)
         if rtn == QMessageBox.Yes:
             self.controler.onSavePosition2Csv()
